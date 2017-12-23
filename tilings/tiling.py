@@ -4,18 +4,20 @@ VERTEX = "v"
 EDGE = "e"
 FACE = "f"
 LABELS = frozenset([VERTEX, EDGE, FACE])
+DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}
 EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
 
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
         self._skeleton = None
+        self._dual = kargs.pop("dual", None)
         if "skeleton" in kargs or "faces" in kargs:
             assert "skeleton" in kargs and "faces" in kargs, \
                 "both skeleton and faces should be given, or none"
             assert len(largs) == 0 and kargs.get("data") is None, \
                 "graph data should not be given along skeleton and faces"
-            self._skeleton = kargs["skeleton"]
-            faces = kargs["faces"]
+            self._skeleton = kargs.pop("skeleton")
+            faces = kargs.pop("faces")
             if not isinstance(faces, dict):
                 faces = dict(enumerate(faces))
             self._skeleton._scream_if_not_simple()
@@ -49,15 +51,10 @@ class Tiling(Graph):
             self._vertices = self._skeleton.vertices()
             self._edges = self._skeleton.edges(labels = False)
             self._faces = faces.keys()
-            del kargs["skeleton"]
-            del kargs["faces"]
         kargs["loops"] = False
         kargs["multiedges"] = False
         kargs["immutable"] = False
-        edge_labels = None
-        if "edge_labels" in kargs:
-            edge_labels = kargs["edge_labels"]
-            del kargs["edge_labels"]
+        edge_labels = kargs.pop("edge_labels", None)
         G = Graph(*largs, **kargs)
         assert G.is_regular(3), "graph is not 3-regular"
         if edge_labels is not None:
@@ -90,7 +87,8 @@ class Tiling(Graph):
             self._skeleton = Graph([[loops[e], loops[e]] if e in loops
                                     else [v for v in self._vertices
                                           if len(e & v) == 2]
-                                    for e in self._edges])
+                                    for e in self._edges],
+                                    loops = True, multiedges = True)
 
     def copy(self, weighted = None, implementation = 'c_graph',
              data_structure = None, sparse = None, immutable = None):
@@ -107,6 +105,12 @@ class Tiling(Graph):
                                     data_structure = data_structure,
                                     sparse = sparse,
                                     immutable = immutable)
+
+    def dual(self):
+        if self._dual is None:
+            self._dual = Tiling([(u, v, DUAL[l]) for u, v, l in self.edges()],
+                                dual = self)
+        return self._dual
 
     def graphplot(self, *largs, **kargs):
         if kargs.get("edge_colors") is None:

@@ -1,10 +1,56 @@
 from sage.graphs.graph import Graph
 
-LABELS = frozenset(["v", "e", "f"])
-EDGE_COLORS = {"v": "red", "e": "green", "f": "blue"}
+VERTEX = "v"
+EDGE = "e"
+FACE = "f"
+LABELS = frozenset([VERTEX, EDGE, FACE])
+EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
 
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
+        self._skeleton = None
+        if "skeleton" in kargs or "faces" in kargs:
+            assert "skeleton" in kargs and "faces" in kargs, \
+                "both skeleton and faces should be given, or none"
+            assert len(largs) == 0 and kargs.get("data") is None, \
+                "graph data should not be given along skeleton and faces"
+            self._skeleton = kargs["skeleton"]
+            faces = kargs["faces"]
+            if not isinstance(faces, dict):
+                faces = dict(enumerate(faces))
+            self._skeleton._scream_if_not_simple()
+            assert self._skeleton.is_connected(), "skeleton is not connected"
+            assert self._skeleton.order() > 1, \
+                "skeleton should have at least two vertices"
+            edges = []
+            blades = {frozenset(e): [] for e
+                      in self._skeleton.edges(labels = False)}
+            for f, l in faces.items():
+                for i in range(len(l)):
+                    e = frozenset([l[i-1], l[i]])
+                    assert e in blades, "edge %s not in skeleton" % tuple(e)
+                    if len(blades[e]) == 1:
+                        g, = blades[e]
+                        edges.append(((l[i-1], l[i], f), (l[i-1], l[i], g),
+                                      FACE))
+                        edges.append(((l[i], l[i-1], f), (l[i], l[i-1], g),
+                                      FACE))
+                    else:
+                        assert len(blades[e]) == 0, \
+                            "edge %s lies on three faces" % tuple(e)
+                    blades[e].append(f)
+                    edges.append(((l[i-1], l[i], f), (l[i], l[i-1], f),
+                                  VERTEX))
+                    edges.append(((l[i-1], l[i-2], f), (l[i-1], l[i], f),
+                                  EDGE))
+            assert all(len(x) == 2 for x in blades.values()), \
+                "not all edges lie on two faces"
+            kargs["data"] = edges
+            self._vertices = self._skeleton.vertices()
+            self._edges = self._skeleton.edges(labels = False)
+            self._faces = faces.keys()
+            del kargs["skeleton"]
+            del kargs["faces"]
         kargs["loops"] = False
         kargs["multiedges"] = False
         kargs["immutable"] = False
@@ -21,10 +67,30 @@ class Tiling(Graph):
             "improper labels used"
         assert all(frozenset(G.edge_label(u, v) for v in G[u]) == LABELS
                    for u in G), "edges not labelled properly"
-        assert Graph([(u, v) for u, v, l in G.edges()
-                      if l != "e"]).connected_components_number() * 4 == \
-                G.order(), "involutions not commuting properly"
+        edge_graph = Graph([(u, v) for u, v, l in G.edges() if l != EDGE])
+        assert edge_graph.connected_components_number() * 4 == G.order(), \
+            "involutions not commuting properly"
         Graph.__init__(self, G, immutable = True)
+        if self._skeleton is None:
+            self._vertices = [frozenset(x) for x
+                              in Graph([(u, v) for u, v, l in G.edges()
+                                    if l != VERTEX]).connected_components()]
+            self._edges = [frozenset(x) for x
+                           in edge_graph.connected_components()]
+            self._faces = [frozenset(x) for x
+                           in Graph([(u, v) for u, v, l in G.edges()
+                                     if l != FACE]).connected_components()]
+            loops = {}
+            for e in self._edges:
+                try:
+                    loops[e] = next(v for v in self._vertices
+                                    if e.issubset(v))
+                except StopIteration:
+                    pass
+            self._skeleton = Graph([[loops[e], loops[e]] if e in loops
+                                    else [v for v in self._vertices
+                                          if len(e & v) == 2]
+                                    for e in self._edges])
 
     def copy(self, weighted = None, implementation = 'c_graph',
              data_structure = None, sparse = None, immutable = None):
@@ -63,6 +129,9 @@ class Tiling(Graph):
             return G, perm
         else:
             return G
+
+    def skeleton(self):
+        return self._skeleton
 
     def _subgraph_by_adding(self, vertices = None, edges = None,
                             edge_property = None, immutable = None, *largs,

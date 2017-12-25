@@ -6,11 +6,17 @@ FACE = "f"
 LABELS = frozenset([VERTEX, EDGE, FACE])
 DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}
 EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
+NONSIMPLE = {"loops": True, "multiedges": True}
 
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
         self._skeleton = None
+        self._muscles = None
         self._dual = kargs.pop("dual", None)
+        if self._dual is not None:
+            self._skeleton = self._dual._muscles
+            self._muscles = self._dual._skeleton
+        faces = None
         if "skeleton" in kargs or "faces" in kargs:
             assert "skeleton" in kargs and "faces" in kargs, \
                 "both skeleton and faces should be given, or none"
@@ -51,6 +57,7 @@ class Tiling(Graph):
             self._vertices = self._skeleton.vertices()
             self._edges = self._skeleton.edges(labels = False)
             self._faces = faces.keys()
+            self._muscles = Graph(blades.values(), **NONSIMPLE)
         kargs["loops"] = False
         kargs["multiedges"] = False
         kargs["immutable"] = False
@@ -78,17 +85,27 @@ class Tiling(Graph):
                            in Graph([(u, v) for u, v, l in G.edges()
                                      if l != FACE]).connected_components()]
             loops = {}
+            dualloops = {}
             for e in self._edges:
                 try:
                     loops[e] = next(v for v in self._vertices
                                     if e.issubset(v))
                 except StopIteration:
                     pass
+                try:
+                    dualloops[e] = next(v for v in self._faces
+                                        if e.issubset(v))
+                except StopIteration:
+                    pass
             self._skeleton = Graph([[loops[e], loops[e]] if e in loops
                                     else [v for v in self._vertices
                                           if len(e & v) == 2]
-                                    for e in self._edges],
-                                    loops = True, multiedges = True)
+                                    for e in self._edges], **NONSIMPLE)
+            self._muscles = Graph([[dualloops[e], dualloops[e]]
+                                   if e in dualloops
+                                   else [f for f in self._faces
+                                         if len(e & f) == 2]
+                                   for e in self._edges], **NONSIMPLE)
 
     def copy(self, weighted = None, implementation = 'c_graph',
              data_structure = None, sparse = None, immutable = None):
@@ -118,6 +135,9 @@ class Tiling(Graph):
                                         if l == t]
                                     for t, c in EDGE_COLORS.items()}
         return Graph.graphplot(self, *largs, **kargs)
+
+    def muscles(self):
+        return self._muscles
 
     def relabel(self, perm = None, inplace = True, return_map = False,
                 check_input = True, complete_partial_function = True,

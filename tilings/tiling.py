@@ -8,6 +8,10 @@ DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}
 EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
 NONSIMPLE = {"loops": True, "multiedges": True}
 
+def meanpos(G, l):
+    return tuple(sum(p) / float(len(p))
+                 for p in zip(*(G._pos[x] for x in l)))
+
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
         self._skeleton = None
@@ -106,6 +110,38 @@ class Tiling(Graph):
                                    else [f for f in self._faces
                                          if len(e & f) == 2]
                                    for e in self._edges], **NONSIMPLE)
+            if self._pos is not None:
+                self._skeleton._pos = {}
+                self._muscles._pos = {}
+                for v in self._skeleton:
+                    self._skeleton._pos[v] = meanpos(self, v)
+                for f in self._muscles:
+                    self._muscles._pos[f] = meanpos(self, f)
+        elif self._dual is not None:
+            if self._dual._pos is not None:
+                self._pos = dict(self._dual._pos)
+        elif self._skeleton._pos is not None:
+            if self._pos is None:
+                self._pos = {}
+                for u, v, f in self:
+                    w = next(y for x, y, z in self[u, v, f]
+                             if (x, z) == (u, f))
+                    pu, pv, pw = (self._skeleton._pos[x] for x in (u, v, w))
+                                            # 1-(sin(pi/8)+cos(pi/8))/3
+                    self._pos[u, v, f] = tuple(0.564479011707874 * a +
+                                            # cos(pi/8)/3
+                                               0.307959844170429 * b +
+                                            # sin(pi/8)/3
+                                               0.127561144121697 * c
+                                               for a, b, c in zip(pu, pv, pw))
+            if self._muscles._pos is None:
+                self._muscles._pos = {}
+                for k, f in faces.items():
+                    self._muscles._pos[k] = meanpos(self._skeleton, f)
+
+    def characteristic(self):
+        return self._skeleton.order() - self._skeleton.size() + \
+            self._muscles.order()
 
     def copy(self, weighted = None, implementation = 'c_graph',
              data_structure = None, sparse = None, immutable = None):

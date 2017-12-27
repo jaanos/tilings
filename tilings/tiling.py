@@ -1,25 +1,25 @@
 from sage.graphs.graph import Graph
-
-VERTEX = "v"
-EDGE = "e"
-FACE = "f"
-LABELS = frozenset([VERTEX, EDGE, FACE])
-DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}
-EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
-NONSIMPLE = {"loops": True, "multiedges": True}
-
-def meanpos(G, l):
-    return tuple(sum(p) / float(len(p))
-                 for p in zip(*(G._pos[x] for x in l)))
+from .constants import VERTEX, EDGE, FACE, LABELS, DUAL, EDGE_COLORS
+from .constants import NONSIMPLE, C8, S8
+from .functions import meanpos
 
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
         self._skeleton = None
         self._muscles = None
+        self._vertex_fun = None
+        self._edge_fun = None
+        self._face_fun = None
         self._dual = kargs.pop("dual", None)
+        vertex_fun = kargs.pop("vertex_fun", None)
+        edge_fun = kargs.pop("edge_fun", None)
+        face_fun = kargs.pop("face_fun", None)
         if self._dual is not None:
             self._skeleton = self._dual._muscles
             self._muscles = self._dual._skeleton
+            self._vertex_fun = self._dual._face_fun
+            self._edge_fun = self._dual._edge_fun
+            self._face_fun = self._dual._vertex_fun
         faces = None
         if "skeleton" in kargs or "faces" in kargs:
             assert "skeleton" in kargs and "faces" in kargs, \
@@ -58,9 +58,9 @@ class Tiling(Graph):
             assert all(len(x) == 2 for x in blades.values()), \
                 "not all edges lie on two faces"
             kargs["data"] = edges
-            self._vertices = self._skeleton.vertices()
-            self._edges = self._skeleton.edges(labels = False)
-            self._faces = faces.keys()
+            vertex_fun = lambda (u, v, f): u
+            edge_fun = lambda (u, v, f): frozenset([u, v])
+            face_fun = lambda (u, v, f): f
             self._muscles = Graph(blades.values(), **NONSIMPLE)
         kargs["loops"] = False
         kargs["multiedges"] = False
@@ -79,44 +79,58 @@ class Tiling(Graph):
         assert edge_graph.connected_components_number() * 4 == G.order(), \
             "involutions not commuting properly"
         Graph.__init__(self, G, immutable = True)
+        if vertex_fun is None:
+            self._vertex_fun = frozenset
+        elif self._vertex_fun is None:
+            self._vertex_fun = lambda v: vertex_fun(next(iter(v)))
+        if edge_fun is None:
+            self._edge_fun = frozenset
+        elif self._edge_fun is None:
+            self._edge_fun = lambda e: edge_fun(next(iter(e)))
+        if face_fun is None:
+            self._face_fun = frozenset
+        elif self._face_fun is None:
+            self._face_fun = lambda f: face_fun(next(iter(f)))
+        self._vertices = {self._vertex_fun(x): frozenset(x) for x
+                          in Graph([(u, v) for u, v, l in G.edges()
+                                if l != VERTEX]).connected_components()}
+        self._edges = {self._edge_fun(x): frozenset(x) for x
+                       in edge_graph.connected_components()}
+        self._faces = {self._face_fun(x): frozenset(x) for x
+                       in Graph([(u, v) for u, v, l in G.edges()
+                                 if l != FACE]).connected_components()}
         if self._skeleton is None:
-            self._vertices = [frozenset(x) for x
-                              in Graph([(u, v) for u, v, l in G.edges()
-                                    if l != VERTEX]).connected_components()]
-            self._edges = [frozenset(x) for x
-                           in edge_graph.connected_components()]
-            self._faces = [frozenset(x) for x
-                           in Graph([(u, v) for u, v, l in G.edges()
-                                     if l != FACE]).connected_components()]
             loops = {}
             dualloops = {}
-            for e in self._edges:
+            for e, t in self._edges.items():
                 try:
-                    loops[e] = next(v for v in self._vertices
-                                    if e.issubset(v))
+                    loops[e] = next(v for v, s in self._vertices.items()
+                                    if t <= s)
                 except StopIteration:
                     pass
                 try:
-                    dualloops[e] = next(v for v in self._faces
-                                        if e.issubset(v))
+                    dualloops[e] = next(f for f, s in self._faces.items()
+                                        if t <= s)
                 except StopIteration:
                     pass
             self._skeleton = Graph([[loops[e], loops[e]] if e in loops
-                                    else [v for v in self._vertices
-                                          if len(e & v) == 2]
-                                    for e in self._edges], **NONSIMPLE)
+                                    else [v for v, s in self._vertices.items()
+                                          if len(s & t) == 2]
+                                    for e, t in self._edges.items()],
+                                   **NONSIMPLE)
             self._muscles = Graph([[dualloops[e], dualloops[e]]
                                    if e in dualloops
-                                   else [f for f in self._faces
-                                         if len(e & f) == 2]
-                                   for e in self._edges], **NONSIMPLE)
+                                   else [f for f, s in self._faces.items()
+                                         if len(s & t) == 2]
+                                   for e, t in self._edges.items()],
+                                  **NONSIMPLE)
             if self._pos is not None:
                 self._skeleton._pos = {}
                 self._muscles._pos = {}
                 for v in self._skeleton:
-                    self._skeleton._pos[v] = meanpos(self, v)
+                    self._skeleton._pos[v] = meanpos(self, self._vertices[v])
                 for f in self._muscles:
-                    self._muscles._pos[f] = meanpos(self, f)
+                    self._muscles._pos[f] = meanpos(self, self._faces[f])
         elif self._dual is not None:
             if self._dual._pos is not None:
                 self._pos = dict(self._dual._pos)
@@ -127,12 +141,8 @@ class Tiling(Graph):
                     w = next(y for x, y, z in self[u, v, f]
                              if (x, z) == (u, f))
                     pu, pv, pw = (self._skeleton._pos[x] for x in (u, v, w))
-                                            # 1-(sin(pi/8)+cos(pi/8))/3
-                    self._pos[u, v, f] = tuple(0.564479011707874 * a +
-                                            # cos(pi/8)/3
-                                               0.307959844170429 * b +
-                                            # sin(pi/8)/3
-                                               0.127561144121697 * c
+                    self._pos[u, v, f] = tuple((1-C8-S8) * a +
+                                               C8 * b + S8 * c
                                                for a, b, c in zip(pu, pv, pw))
             if self._muscles._pos is None:
                 self._muscles._pos = {}

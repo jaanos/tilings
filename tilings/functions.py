@@ -1,12 +1,23 @@
 from sage.rings.integer import Integer
-from .constants import S3
+from .constants import S3, DODECAGON_WRAP
 
 def meanpos(G, l):
     return tuple(sum(p) / float(len(p))
                  for p in zip(*(G._pos[x] for x in l)))
 
-triangularPosition = lambda (i, j): (Integer(i) - Integer(j)/2,
-                                     -Integer(j) * S3)
+def triangularPosition(v, a, f, wrap = None):
+    i, j = v
+    if wrap is not None:
+        n, m, k = wrap
+        h, d = DODECAGON_WRAP[a, f]
+        if d and j == 0:
+            j = m
+            i -= k
+        if h and i == 0:
+            i = n
+    i = Integer(i)
+    j = Integer(j)
+    return (Integer(i) - Integer(j)/2, -Integer(j) * S3)
 
 triangularVertexFunction = lambda (v, e, f): v
 

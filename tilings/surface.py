@@ -13,11 +13,17 @@ class Surface:
 
 class Torus(Surface):
     @staticmethod
-    def triangularTiling(n, m, k):
+    def hexagonalTiling(n, m, k, center_faces = True):
+        return Torus.triangularTiling(n, m, k,
+                                      center_faces = center_faces).dual()
+
+    @staticmethod
+    def triangularTiling(n, m, k, center_faces = False):
         k = k % n
         vertices = cartesian_product([Integers(n), Integers(m)])
         edges = []
         pos = {}
+        wrap = (n, m, k) if center_faces else None
         for v in vertices:
             v = tuple(v)
             i, j = v
@@ -36,8 +42,9 @@ class Torus(Surface):
             for a in TRIANGULAR_ARCS:
                 edges.append(((v, a, 'u'), (v, a, 'd'), FACE))
                 for f in TRIANGULAR_FACES:
-                    pos[v, a, f] = [sum(p) for p in zip(triangularPosition(v),
-                                                        DODECAGON[a, f])]
+                    pos[v, a, f] = [sum(p) for p
+                                    in zip(triangularPosition(v, a, f, wrap),
+                                           DODECAGON[a, f])]
         return Tiling(edges, pos = pos,
                       vertex_fun = triangularVertexFunction,
                       edge_fun = triangularEdgeFunction(k),

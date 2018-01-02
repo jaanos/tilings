@@ -113,13 +113,12 @@ class Tiling(Graph):
                                         if t <= s)
                 except StopIteration:
                     pass
-            self._skeleton = Graph([[loops[e], loops[e]] if e in loops
+            self._skeleton = Graph([[loops[e]]*2 if e in loops
                                     else [v for v, s in self._vertices.items()
                                           if len(s & t) == 2]
                                     for e, t in self._edges.items()],
                                    **NONSIMPLE)
-            self._muscles = Graph([[dualloops[e], dualloops[e]]
-                                   if e in dualloops
+            self._muscles = Graph([[dualloops[e]]*2 if e in dualloops
                                    else [f for f, s in self._faces.items()
                                          if len(s & t) == 2]
                                    for e, t in self._edges.items()],

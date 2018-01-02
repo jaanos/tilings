@@ -1,10 +1,15 @@
 from sage.all import cartesian_product, Integers
-from .constants import VERTEX, EDGE, FACE, DODECAGON
+from sage.rings.integer import Integer
+from .constants import VERTEX, EDGE, FACE, DODECAGON, OCTAGON
 from .constants import TRIANGULAR_ARCS, TRIANGULAR_FACES
-from functions import triangularPosition
-from functions import triangularVertexFunction
+from .constants import HORIZONTAL_ARCS, VERTICAL_ARCS, SQUARE_FLAGS
+from functions import squareEdgeFunction
+from functions import squareFaceFunction
+from functions import squarePosition
 from functions import triangularEdgeFunction
 from functions import triangularFaceFunction
+from functions import triangularPosition
+from functions import vertexFunction
 from .tiling import Tiling
 
 class Surface:
@@ -16,6 +21,33 @@ class Torus(Surface):
     def hexagonalTiling(n, m, k, center_faces = True):
         return Torus.triangularTiling(n, m, k,
                                       center_faces = center_faces).dual()
+
+    @staticmethod
+    def squareTiling(n, m, k):
+        k = k % n
+        vertices = cartesian_product([Integers(n), Integers(m)])
+        edges = []
+        pos = {}
+        r, l = HORIZONTAL_ARCS
+        u, d = VERTICAL_ARCS
+        for v in vertices:
+            v = tuple(v)
+            i, j = v
+            ib = i+k if j == -1 else i
+            for hor in HORIZONTAL_ARCS:
+                edges.append(((v, d, hor), ((ib, j+1), u, hor), VERTEX))
+                edges.append(((v, hor, u), (v, hor, d), FACE))
+            for ver in VERTICAL_ARCS:
+                edges.append(((v, r, ver), ((i+1, j), l, ver), VERTEX))
+                edges.append(((v, ver, l), (v, ver, r), FACE))
+            for hor, ver in SQUARE_FLAGS:
+                edges.append(((v, hor, ver), (v, ver, hor), EDGE))
+            for (e, f), p in OCTAGON.items():
+                pos[v, e, f] = [sum(p) for p in zip(squarePosition(v), p)]
+        return Tiling(edges, pos = pos,
+                      vertex_fun = vertexFunction,
+                      edge_fun = squareEdgeFunction(k),
+                      face_fun = squareFaceFunction(k))
 
     @staticmethod
     def triangularTiling(n, m, k, center_faces = False):
@@ -46,6 +78,6 @@ class Torus(Surface):
                                     in zip(triangularPosition(v, a, f, wrap),
                                            DODECAGON[a, f])]
         return Tiling(edges, pos = pos,
-                      vertex_fun = triangularVertexFunction,
+                      vertex_fun = vertexFunction,
                       edge_fun = triangularEdgeFunction(k),
                       face_fun = triangularFaceFunction(k))

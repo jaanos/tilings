@@ -5,6 +5,9 @@ def meanpos(G, l):
     return tuple(sum(p) / float(len(p))
                  for p in zip(*(G._pos[x] for x in l)))
 
+def squarePosition((i, j)):
+    return (Integer(i), -Integer(j))
+
 def triangularPosition(v, a, f, wrap = None):
     i, j = v
     if wrap is not None:
@@ -19,7 +22,30 @@ def triangularPosition(v, a, f, wrap = None):
     j = Integer(j)
     return (Integer(i) - Integer(j)/2, -Integer(j) * S3)
 
-triangularVertexFunction = lambda (v, e, f): v
+vertexFunction = lambda (v, e, f): v
+
+def squareEdgeFunction(k):
+    def edgeFun((v, e, f)):
+        i, j = v
+        if e == 'l':
+            return ((i-1, j), 'r')
+        elif e == 'u':
+            return ((i-k if j == 0 else i, j-1), 'd')
+        else:
+            return (v, e)
+    return edgeFun
+
+def squareFaceFunction(k):
+    def faceFun((v, e, f)):
+        i, j = v
+        if 'l' in [e, f]:
+            i -= 1
+        if 'u' in [e, f]:
+            if j == 0:
+                i -= k
+            j -= 1
+        return (i, j)
+    return faceFun
 
 def triangularEdgeFunction(k):
     def edgeFun((v, e, f)):

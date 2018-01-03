@@ -2,7 +2,12 @@ from sage.all import cartesian_product, Integers
 from sage.rings.integer import Integer
 from .constants import VERTEX, EDGE, FACE, DODECAGON, OCTAGON
 from .constants import TRIANGULAR_ARCS, TRIANGULAR_FACES
-from .constants import HORIZONTAL_ARCS, VERTICAL_ARCS, SQUARE_FLAGS
+from .constants import HORIZONTAL_ARCS, HORIZONTAL_ARCS_REVERSED
+from .constants import VERTICAL_ARCS, SQUARE_FLAGS
+from functions import kleinBottleSquareEdgeFunction1
+from functions import kleinBottleSquareFaceFunction1
+from functions import kleinBottleSquarePosition1
+from functions import kleinBottleSquareWrap1
 from functions import squareEdgeFunction
 from functions import squareFaceFunction
 from functions import squarePosition
@@ -81,3 +86,41 @@ class Torus(Surface):
                       vertex_fun = vertexFunction,
                       edge_fun = triangularEdgeFunction(k),
                       face_fun = triangularFaceFunction(k))
+
+class KleinBottle(Surface):
+    @staticmethod
+    def squareTiling1(n, m, center_faces = False):
+        vertices = cartesian_product([Integers(n), Integers(m)])
+        edges = []
+        pos = {}
+        wrap = (n, m) if center_faces else None
+        r, l = HORIZONTAL_ARCS
+        u, d = VERTICAL_ARCS
+        for v in vertices:
+            v = tuple(v)
+            i, j = v
+            ib, harcs = (-i, reversed(HORIZONTAL_ARCS)) if j == -1 \
+                        else (i, HORIZONTAL_ARCS)
+            for hor, horb in zip(HORIZONTAL_ARCS, harcs):
+                edges.append(((v, d, hor), ((ib, j+1), u, horb), VERTEX))
+                edges.append(((v, hor, u), (v, hor, d), FACE))
+            for ver in VERTICAL_ARCS:
+                edges.append(((v, r, ver), ((i+1, j), l, ver), VERTEX))
+                edges.append(((v, ver, l), (v, ver, r), FACE))
+            for hor, ver in SQUARE_FLAGS:
+                edges.append(((v, hor, ver), (v, ver, hor), EDGE))
+            for (e, f), p in OCTAGON.items():
+                pos[v, e, f] = [sum(p) for p
+                                in zip(kleinBottleSquarePosition1(v, e, f,
+                                                                  wrap),
+                                       kleinBottleSquareWrap1(p, v, e, f,
+                                                              wrap))]
+        return Tiling(edges, pos = pos,
+                      vertex_fun = vertexFunction,
+                      edge_fun = kleinBottleSquareEdgeFunction1,
+                      face_fun = kleinBottleSquareFaceFunction1)
+
+    @staticmethod
+    def squareTiling1Dual(n, m, center_faces = True):
+        return KleinBottle.squareTiling1(n, m,
+                                         center_faces = center_faces).dual()

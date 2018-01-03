@@ -34,6 +34,8 @@ TRIANGULAR_FACES = 'ud'
 
 HORIZONTAL_ARCS = ['r', 'l']
 VERTICAL_ARCS = ['u', 'd']
+HORIZONTAL_SWAP = dict(zip(HORIZONTAL_ARCS, reversed(HORIZONTAL_ARCS)) +
+                       zip(VERTICAL_ARCS, VERTICAL_ARCS))
 SQUARE_FLAGS = cartesian_product([HORIZONTAL_ARCS, VERTICAL_ARCS])
 OCTAGON = {tuple(k): (n(cos(x)/T), n(sin(x)/T))
            for k, x in zip(['ru', 'ur', 'ul', 'lu', 'ld', 'dl', 'dr', 'rd'],

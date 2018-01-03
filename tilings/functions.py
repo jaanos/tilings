@@ -1,11 +1,29 @@
 from sage.rings.integer import Integer
-from .constants import S3, DODECAGON_WRAP
+from .constants import S3, DODECAGON_WRAP, HORIZONTAL_SWAP
 
 makeEdge = lambda e: e*2 if len(e) == 1 else e
 
 def meanpos(G, l):
     return tuple(sum(p) / float(len(p))
                  for p in zip(*(G._pos[x] for x in l)))
+
+def kleinBottleSquarePosition1(v, a, f, wrap = None):
+    i, j = v
+    if wrap is not None:
+        n, m = wrap
+        if 'u' in [a, f] and j == 0:
+            i = -i
+            j = m
+            a = HORIZONTAL_SWAP[a]
+            f = HORIZONTAL_SWAP[f]
+        if 'l' in [a, f] and i == 0:
+            i = n
+    return (Integer(i), -Integer(j))
+
+def kleinBottleSquareWrap1(p, v, a, f, wrap = None):
+    i, j = v
+    x, y = p
+    return (-x, y) if wrap is not None and 'u' in [a, f] and j == 0 else p
 
 def squarePosition((i, j)):
     return (Integer(i), -Integer(j))
@@ -22,7 +40,28 @@ def triangularPosition(v, a, f, wrap = None):
             i = n
     i = Integer(i)
     j = Integer(j)
-    return (Integer(i) - Integer(j)/2, -Integer(j) * S3)
+    return (i - j/2, -j * S3)
+
+def kleinBottleSquareEdgeFunction1((v, e, f)):
+    i, j = v
+    if e == 'l':
+        return ((i-1, j), 'r')
+    elif e == 'u':
+        return ((-i if j == 0 else i, j-1), 'd')
+    else:
+        return (v, e)
+
+def kleinBottleSquareFaceFunction1((v, e, f)):
+    i, j = v
+    lb = 'l'
+    if 'u' in [e, f]:
+        if j == 0:
+            i = -i
+            lb = 'r'
+        j -= 1
+    if lb in [e, f]:
+        i -= 1
+    return (i, j)
 
 def squareEdgeFunction(k):
     def edgeFun((v, e, f)):

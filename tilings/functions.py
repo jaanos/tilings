@@ -1,6 +1,8 @@
 from sage.rings.integer import Integer
 from .constants import S3, DODECAGON_WRAP
 
+makeEdge = lambda e: e*2 if len(e) == 1 else e
+
 def meanpos(G, l):
     return tuple(sum(p) / float(len(p))
                  for p in zip(*(G._pos[x] for x in l)))
@@ -21,8 +23,6 @@ def triangularPosition(v, a, f, wrap = None):
     i = Integer(i)
     j = Integer(j)
     return (Integer(i) - Integer(j)/2, -Integer(j) * S3)
-
-vertexFunction = lambda (v, e, f): v
 
 def squareEdgeFunction(k):
     def edgeFun((v, e, f)):
@@ -76,3 +76,5 @@ def triangularFaceFunction(k):
                 u = (i+k+1 if j == -1 else i+1, j+1)
         return (u, f)
     return faceFun
+
+vertexFunction = lambda (v, e, f): v

@@ -1,7 +1,7 @@
 from sage.graphs.graph import Graph
 from .constants import VERTEX, EDGE, FACE, LABELS, DUAL, EDGE_COLORS
 from .constants import NONSIMPLE, C8, S8
-from .functions import meanpos
+from .functions import makeEdge, meanpos
 
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
@@ -100,27 +100,13 @@ class Tiling(Graph):
                        in Graph([(u, v) for u, v, l in G.edges()
                                  if l != FACE]).connected_components()}
         if self._skeleton is None:
-            loops = {}
-            dualloops = {}
-            for e, t in self._edges.items():
-                try:
-                    loops[e] = next(v for v, s in self._vertices.items()
-                                    if t <= s)
-                except StopIteration:
-                    pass
-                try:
-                    dualloops[e] = next(f for f, s in self._faces.items()
-                                        if t <= s)
-                except StopIteration:
-                    pass
-            self._skeleton = Graph([[loops[e]]*2 if e in loops
-                                    else [v for v, s in self._vertices.items()
-                                          if len(s & t) == 2]
+            self._skeleton = Graph([makeEdge([v for v, s
+                                              in self._vertices.items()
+                                              if len(s & t) > 0])
                                     for e, t in self._edges.items()],
                                    **NONSIMPLE)
-            self._muscles = Graph([[dualloops[e]]*2 if e in dualloops
-                                   else [f for f, s in self._faces.items()
-                                         if len(s & t) == 2]
+            self._muscles = Graph([makeEdge([f for f, s in self._faces.items()
+                                             if len(s & t) > 0])
                                    for e, t in self._edges.items()],
                                   **NONSIMPLE)
             if self._pos is not None:

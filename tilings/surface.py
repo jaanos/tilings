@@ -1,13 +1,16 @@
 from sage.all import cartesian_product, Integers
 from sage.rings.integer import Integer
-from .constants import VERTEX, EDGE, FACE, DODECAGON, OCTAGON
+from .constants import S2, VERTEX, EDGE, FACE, DODECAGON, OCTAGON
 from .constants import TRIANGULAR_ARCS, TRIANGULAR_FACES
-from .constants import HORIZONTAL_ARCS, HORIZONTAL_ARCS_REVERSED
-from .constants import VERTICAL_ARCS, SQUARE_FLAGS
+from .constants import HORIZONTAL_ARCS, VERTICAL_ARCS, SQUARE_FLAGS
+from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
 from functions import kleinBottleSquareEdgeFunction1
 from functions import kleinBottleSquareFaceFunction1
 from functions import kleinBottleSquarePosition1
 from functions import kleinBottleSquareWrap1
+from functions import kleinBottleSquareEdgeFunction2
+from functions import kleinBottleSquareFaceFunction2
+from functions import kleinBottleSquareWrap2
 from functions import squareEdgeFunction
 from functions import squareFaceFunction
 from functions import squarePosition
@@ -47,8 +50,8 @@ class Torus(Surface):
                 edges.append(((v, ver, l), (v, ver, r), FACE))
             for hor, ver in SQUARE_FLAGS:
                 edges.append(((v, hor, ver), (v, ver, hor), EDGE))
-            for (e, f), p in OCTAGON.items():
-                pos[v, e, f] = [sum(p) for p in zip(squarePosition(v), p)]
+            for (e, f), q in OCTAGON.items():
+                pos[v, e, f] = [sum(p) for p in zip(squarePosition(v), q)]
         return Tiling(edges, pos = pos,
                       vertex_fun = vertexFunction,
                       edge_fun = squareEdgeFunction(k),
@@ -124,3 +127,33 @@ class KleinBottle(Surface):
     def squareTiling1Dual(n, m, center_faces = True):
         return KleinBottle.squareTiling1(n, m,
                                          center_faces = center_faces).dual()
+
+    @staticmethod
+    def squareTiling2(n, m):
+        vertices = [(i, j) for i, j in cartesian_product([Integers(2*n),
+                                                          Integers(m)])
+                    if (Integer(i) + Integer(j)) % 2 == 0]
+        edges = []
+        pos = {}
+        r, l = HORIZONTAL_ARCS
+        u, d = VERTICAL_ARCS
+        for v in vertices:
+            i, j = v
+            for hor in HORIZONTAL_ARCS:
+                ib, horb = kleinBottleSquareWrap2(i, j+1, hor, m)
+                horb = HORIZONTAL_SWAP[horb]
+                ib -= HORIZONTAL_OFFSET[horb]
+                edges.append(((v, d, hor), ((ib, j+1), horb, u), VERTEX))
+                edges.append(((v, hor, d), ((ib, j+1), u, horb), VERTEX))
+                edges.append(((v, hor, u), (v, hor, d), EDGE))
+            for ver in VERTICAL_ARCS:
+                edges.append(((v, ver, l), (v, ver, r), EDGE))
+            for hor, ver in SQUARE_FLAGS:
+                edges.append(((v, hor, ver), (v, ver, hor), FACE))
+            for (e, f), q in OCTAGON.items():
+                pos[v, e, f] = [x + y * S2 for x, y
+                                in zip(squarePosition(v), q)]
+        return Tiling(edges, pos = pos,
+                      vertex_fun = vertexFunction,
+                      edge_fun = kleinBottleSquareEdgeFunction2(m),
+                      face_fun = kleinBottleSquareFaceFunction2(m))

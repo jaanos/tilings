@@ -1,5 +1,7 @@
 from sage.rings.integer import Integer
-from .constants import S3, DODECAGON_WRAP, HORIZONTAL_SWAP
+from .constants import S3, DODECAGON_WRAP
+from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
+from .constants import HORIZONTAL_ARCS, VERTICAL_ARCS
 
 makeEdge = lambda e: e*2 if len(e) == 1 else e
 
@@ -24,6 +26,9 @@ def kleinBottleSquareWrap1(p, v, a, f, wrap = None):
     i, j = v
     x, y = p
     return (-x, y) if wrap is not None and 'u' in [a, f] and j == 0 else p
+
+kleinBottleSquareWrap2 = lambda i, j, hor, m: \
+    (-i if m % 2 == 0 else -i-1, HORIZONTAL_SWAP[hor]) if j == 0 else (i, hor)
 
 def squarePosition((i, j)):
     return (Integer(i), -Integer(j))
@@ -62,6 +67,31 @@ def kleinBottleSquareFaceFunction1((v, e, f)):
     if lb in [e, f]:
         i -= 1
     return (i, j)
+
+def kleinBottleSquareEdgeFunction2(m):
+    def edgeFun((v, e, f)):
+        i, j = v
+        hor = next(x for x in [e, f] if x in HORIZONTAL_ARCS)
+        ver = next(x for x in [e, f] if x in VERTICAL_ARCS)
+        if ver == 'u':
+            i, hor = kleinBottleSquareWrap2(i, j, hor, m)
+            i, j = (i + HORIZONTAL_OFFSET[hor], j-1)
+            hor = HORIZONTAL_SWAP[hor]
+        return ((i, j), hor)
+    return edgeFun
+
+def kleinBottleSquareFaceFunction2(m):
+    def faceFun((v, e, f)):
+        i, j = v
+        if e == 'u':
+            i, f = kleinBottleSquareWrap2(i, j, f, m)
+            i, j = (i + HORIZONTAL_OFFSET[f], j-1)
+            e, f = HORIZONTAL_SWAP[f], e
+        if e in HORIZONTAL_ARCS:
+            i, e = kleinBottleSquareWrap2(i, j, e, m)
+            i, j = (i + HORIZONTAL_OFFSET[e], j-1)
+        return (i, j)
+    return faceFun
 
 def squareEdgeFunction(k):
     def edgeFun((v, e, f)):

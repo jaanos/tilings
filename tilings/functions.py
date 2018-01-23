@@ -1,5 +1,5 @@
 from sage.rings.integer import Integer
-from .constants import S3, DODECAGON_WRAP
+from .constants import S3, DODECAGON_WRAP, DODECAGON1_SWAP
 from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
 from .constants import HORIZONTAL_ARCS, VERTICAL_ARCS
 
@@ -32,6 +32,28 @@ kleinBottleSquareWrap2 = lambda i, j, hor, m: \
 
 def squarePosition((i, j)):
     return (Integer(i), -Integer(j))
+
+def kleinBottleTriangularPosition1(v, a, f, wrap = None):
+    i, j = v
+    if wrap is not None:
+        n, m = wrap
+        h, d = DODECAGON_WRAP[a, f]
+        if d and j == 0:
+            j = m
+            i = -i
+            a = DODECAGON1_SWAP[a]
+            h, d = DODECAGON_WRAP[a, f]
+        if h and i == 0:
+            i = n
+    i = Integer(i)
+    j = Integer(j)
+    return (i - j/2, -j * S3)
+
+def kleinBottleTriangularWrap1(p, v, a, f, wrap = None):
+    i, j = v
+    x, y = p
+    return (-x, y) if wrap is not None and j == 0 and \
+                      (a in 'Bc' or (f == 'u' and a in 'aA')) else p
 
 def triangularPosition(v, a, f, wrap = None):
     i, j = v
@@ -116,6 +138,32 @@ def squareFaceFunction(k):
         return (i, j)
     return faceFun
 
+def kleinBottleTriangularEdgeFunction1((v, e, f)):
+    i, j = v
+    ib, bb, cc = (-i, 'c', 'B') if j == 0 else (i, 'B', 'c')
+    if e == 'A':
+        return ((i-1, j), 'a')
+    elif e == bb:
+        return ((ib, j-1), 'b')
+    elif e == cc:
+        return ((ib-1, j-1), 'C')
+    else:
+        return (v, e)
+
+def kleinBottleTriangularFaceFunction1((v, e, f)):
+    i, j = v
+    if f == 'u':
+        if e in 'aB':
+            v = (-i-1 if j == 0 else i, j-1)
+        elif e in 'Ac':
+            v = (-i if j == 0 else i-1, j-1)
+    else:
+        if e in 'Ab':
+            v = (-i if j == -1 else i, j+1)
+        elif e in 'aC':
+            v = (-i-1 if j == -1 else i+1, j+1)
+    return (v, f)
+
 def triangularEdgeFunction(k):
     def edgeFun((v, e, f)):
         i, j = v
@@ -132,18 +180,17 @@ def triangularEdgeFunction(k):
 def triangularFaceFunction(k):
     def faceFun((v, e, f)):
         i, j = v
-        u = v
         if f == 'u':
             if e in 'aB':
-                u = (i-k if j == 0 else i, j-1)
+                v = (i-k if j == 0 else i, j-1)
             elif e in 'Ac':
-                u = (i-k-1 if j == 0 else i-1, j-1)
+                v = (i-k-1 if j == 0 else i-1, j-1)
         else:
             if e in 'Ab':
-                u = (i+k if j == -1 else i, j+1)
+                v = (i+k if j == -1 else i, j+1)
             elif e in 'aC':
-                u = (i+k+1 if j == -1 else i+1, j+1)
-        return (u, f)
+                v = (i+k+1 if j == -1 else i+1, j+1)
+        return (v, f)
     return faceFun
 
 vertexFunction = lambda (v, e, f): v

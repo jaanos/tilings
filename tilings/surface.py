@@ -11,6 +11,10 @@ from functions import kleinBottleSquareWrap1
 from functions import kleinBottleSquareEdgeFunction2
 from functions import kleinBottleSquareFaceFunction2
 from functions import kleinBottleSquareWrap2
+from functions import kleinBottleTriangularEdgeFunction1
+from functions import kleinBottleTriangularFaceFunction1
+from functions import kleinBottleTriangularPosition1
+from functions import kleinBottleTriangularWrap1
 from functions import squareEdgeFunction
 from functions import squareFaceFunction
 from functions import squarePosition
@@ -92,6 +96,11 @@ class Torus(Surface):
 
 class KleinBottle(Surface):
     @staticmethod
+    def hexagonalTiling1(n, m, center_faces = True):
+        return KleinBottle.triangularTiling1(n, m,
+                                        center_faces = center_faces).dual()
+
+    @staticmethod
     def squareTiling1(n, m, center_faces = False):
         vertices = cartesian_product([Integers(n), Integers(m)])
         edges = []
@@ -157,3 +166,37 @@ class KleinBottle(Surface):
                       vertex_fun = vertexFunction,
                       edge_fun = kleinBottleSquareEdgeFunction2(m),
                       face_fun = kleinBottleSquareFaceFunction2(m))
+
+    @staticmethod
+    def triangularTiling1(n, m, center_faces = False):
+        vertices = cartesian_product([Integers(n), Integers(m)])
+        edges = []
+        pos = {}
+        wrap = (n, m) if center_faces else None
+        for v in vertices:
+            v = tuple(v)
+            i, j = v
+            ib, ic, bb, cc = (-i, -i-1, 'c', 'B') if j == -1 else \
+                             (i, i+1, 'B', 'c')
+            edges.append(((v, 'a', 'u'), (v, 'B', 'u'), EDGE))
+            edges.append(((v, 'a', 'd'), (v, 'C', 'd'), EDGE))
+            edges.append(((v, 'b', 'u'), (v, 'C', 'u'), EDGE))
+            edges.append(((v, 'b', 'd'), (v, 'A', 'd'), EDGE))
+            edges.append(((v, 'c', 'u'), (v, 'A', 'u'), EDGE))
+            edges.append(((v, 'c', 'd'), (v, 'B', 'd'), EDGE))
+            for f in TRIANGULAR_FACES:
+                edges.append(((v, 'a', f), ((i+1, j), 'A', f), VERTEX))
+                edges.append(((v, 'b', f), ((ib, j+1), bb, f), VERTEX))
+                edges.append(((v, 'C', f), ((ic, j+1), cc, f), VERTEX))
+            for a in TRIANGULAR_ARCS:
+                edges.append(((v, a, 'u'), (v, a, 'd'), FACE))
+            for (e, f), p in DODECAGON.items():
+                pos[v, e, f] = [sum(p) for p
+                                in zip(kleinBottleTriangularPosition1(v, e, f,
+                                                                      wrap),
+                                       kleinBottleTriangularWrap1(p, v, e, f,
+                                                                  wrap))]
+        return Tiling(edges, pos = pos,
+                      vertex_fun = vertexFunction,
+                      edge_fun = kleinBottleTriangularEdgeFunction1,
+                      face_fun = kleinBottleTriangularFaceFunction1)

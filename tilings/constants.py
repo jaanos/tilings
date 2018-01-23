@@ -30,8 +30,9 @@ DODECAGON_WRAP = {tuple(k): p for k, p
                           (True, False), (True, False), (False, False),
                           (False, False), (False, False), (False, False)])}
 
-TRIANGULAR_ARCS = 'abcABC'
+TRIANGULAR_ARCS = 'abcBCA'
 TRIANGULAR_FACES = 'ud'
+DODECAGON1_SWAP = dict(zip(TRIANGULAR_ARCS, reversed(TRIANGULAR_ARCS)))
 
 HORIZONTAL_ARCS = ['r', 'l']
 VERTICAL_ARCS = ['u', 'd']

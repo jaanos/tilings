@@ -18,6 +18,9 @@ S3 = n(sqrt(3)/2)
 C8 = n(cos(pi/8)/T)
 S8 = n(sin(pi/8)/T)
 
+HORIZONTAL_LABELS = ['r', 'l']
+VERTICAL_LABELS = ['u', 'd']
+
 DODECAGON_FLAGS = ['au', 'Bu', 'Bd', 'cd', 'cu', 'Au',
                    'Ad', 'bd', 'bu', 'Cu', 'Cd', 'ad']
 DODECAGON = {tuple(k): (n(cos(x)/T), n(sin(x)/T))
@@ -31,15 +34,25 @@ DODECAGON_WRAP = {tuple(k): p for k, p
                           (False, False), (False, False), (False, False)])}
 
 TRIANGULAR_ARCS = 'abcBCA'
-TRIANGULAR_FACES = 'ud'
-DODECAGON1_SWAP = dict(zip(TRIANGULAR_ARCS, reversed(TRIANGULAR_ARCS)))
+DODECAGON_SWAP = dict(zip(TRIANGULAR_ARCS, reversed(TRIANGULAR_ARCS)))
 
-HORIZONTAL_ARCS = ['r', 'l']
-VERTICAL_ARCS = ['u', 'd']
-HORIZONTAL_SWAP = dict(zip(HORIZONTAL_ARCS, reversed(HORIZONTAL_ARCS)) +
-                       zip(VERTICAL_ARCS, VERTICAL_ARCS))
-HORIZONTAL_OFFSET = dict(zip(HORIZONTAL_ARCS, [1, -1]))
-SQUARE_FLAGS = cartesian_product([HORIZONTAL_ARCS, VERTICAL_ARCS])
+DODECAGON2_FLAGS = ['cl', 'cr', 'Ar', 'Al', 'bl', 'br',
+                    'Cr', 'Cl', 'al', 'ar', 'Br', 'Bl']
+DODECAGON2 = {tuple(k): (n(cos(x)/T), n(sin(x)/T))
+              for k, x in zip(DODECAGON2_FLAGS,
+                              [(2*i+1)*pi/12 for i in range(12)])}
+DODECAGON2_WRAP = {tuple(k): p for k, p
+                   in zip(DODECAGON2_FLAGS,
+                          [(False, 1), (False, 2), (False, 2),
+                           (True, 2), (True, 2), (True, 1),
+                           (True, 1), (True, 0), (True, 0),
+                           (False, 0), (False, 0), (False, 1)])}
+DODECAGON2_SWAP = dict(zip('abcABC', 'acbACB'))
+
+HORIZONTAL_SWAP = dict(zip(HORIZONTAL_LABELS, reversed(HORIZONTAL_LABELS)) +
+                       zip(VERTICAL_LABELS, VERTICAL_LABELS))
+HORIZONTAL_OFFSET = dict(zip(HORIZONTAL_LABELS, [1, -1]))
+SQUARE_FLAGS = cartesian_product([HORIZONTAL_LABELS, VERTICAL_LABELS])
 OCTAGON = {tuple(k): (n(cos(x)/T), n(sin(x)/T))
            for k, x in zip(['ru', 'ur', 'ul', 'lu', 'ld', 'dl', 'dr', 'rd'],
                            [(2*i+1)*pi/8 for i in range(8)])}

@@ -134,6 +134,25 @@ class Tiling(Graph):
                 for k, f in faces.items():
                     self._muscles._pos[k] = meanpos(self._skeleton, f)
 
+    def automorphism_group(self, partition = None, edge_labels = True,
+                           order = False, return_group = True,
+                           orbits = False, algorithm = None):
+        return Graph.automorphism_group(self, partition = partition,
+                                        edge_labels = edge_labels,
+                                        order = order,
+                                        return_group = return_group,
+                                        orbits = orbits,
+                                        algorithm = algorithm)
+
+    def canonical_label(self, partition = None, certificate = False,
+                        edge_labels = True, algorithm = None,
+                        return_graph = True):
+        return Graph.canonical_label(self, partition = partition,
+                                     certificate = certificate,
+                                     edge_labels = edge_labels,
+                                     algorithm = algorithm,
+                                     return_graph = return_graph)
+
     def characteristic(self):
         return self._skeleton.order() - self._skeleton.size() + \
             self._muscles.order()
@@ -167,6 +186,20 @@ class Tiling(Graph):
                                     for t, c in EDGE_COLORS.items()}
         return Graph.graphplot(self, *largs, **kargs)
 
+    def is_isomorphic(self, other, certificate = False, edge_labels = True):
+        return Graph.is_vertex_transitive(self, other,
+                                          certificate = certificate,
+                                          edge_labels = edge_labels)
+
+    def is_vertex_transitive(self, partition = None, edge_labels = True,
+                             order = False, return_group = True,
+                             orbits = False):
+        return Graph.is_vertex_transitive(self, partition = partition,
+                                          edge_labels = edge_labels,
+                                          order = order,
+                                          return_group = return_group,
+                                          orbits = orbits)
+
     def muscles(self):
         return self._muscles
 
@@ -176,14 +209,9 @@ class Tiling(Graph):
         if inplace:
             raise ValueError("To relabel an immutable graph use inplace=False")
         G = Graph(self, immutable = False)
-        perm = G.relabel(perm, return_map = True, check_input = check_input,
+        return G.relabel(perm, inplace = inplace, return_map = return_map,
+                         check_input = check_input, immutable = immutable,
                          complete_partial_function = complete_partial_function)
-        if immutable is not False:
-            G = self.__class__(self, vertex_labels = perm)
-        if return_map:
-            return G, perm
-        else:
-            return G
 
     def skeleton(self):
         return self._skeleton

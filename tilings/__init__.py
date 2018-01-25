@@ -1,4 +1,4 @@
 from tiling import Tiling
-from surface import Torus, KleinBottle
+from surface import Sphere, Torus, KleinBottle
 
-__all__ = ['Tiling', 'Torus', 'KleinBottle']
+__all__ = ['Tiling', 'Sphere', 'Torus', 'KleinBottle']

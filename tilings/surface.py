@@ -1,10 +1,16 @@
-from sage.all import cartesian_product, Integers
+from sage.all import cartesian_product, Integers, pi
+from sage.functions.trig import cos, sin
+from sage.graphs.graph_generators import graphs
+from sage.misc.functional import numerical_approx as N
 from sage.rings.integer import Integer
 from .constants import S2, S3, VERTEX, EDGE, FACE
+from .constants import HEXAHEDRON_POS
 from .constants import DODECAGON, DODECAGON2, OCTAGON
 from .constants import HORIZONTAL_LABELS, VERTICAL_LABELS
 from .constants import TRIANGULAR_ARCS, SQUARE_FLAGS
 from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
+from functions import first, second
+from functions import hosohedralFaceFunction
 from functions import kleinBottleSquareEdgeFunction1
 from functions import kleinBottleSquareFaceFunction1
 from functions import kleinBottleSquarePosition1
@@ -32,6 +38,83 @@ from .tiling import Tiling
 class Surface:
     def __init__(self):
         raise NotImplementedError
+
+class Sphere(Surface):
+    @staticmethod
+    def dodecahedron():
+        return Tiling(skeleton = graphs.DodecahedralGraph(),
+                      faces = [[0, 1, 2, 3, 19], [0, 10, 11, 18, 19],
+                               [0, 1, 8, 9, 10], [9, 10, 11, 12, 13],
+                               [1, 2, 6, 7, 8], [11, 12, 16, 17, 18],
+                               [2, 3, 4, 5, 6], [12, 13, 14, 15, 16],
+                               [3, 4, 17, 18, 19], [5, 6, 7, 14, 15],
+                               [4, 5, 15, 16, 17], [7, 8, 9, 13, 14]])
+
+    @staticmethod
+    def hexahedron():
+        H = graphs.HexahedralGraph()
+        H._pos = HEXAHEDRON_POS
+        return Tiling(skeleton = H,
+                      faces = [[0, 1, 2, 3], [0, 1, 5, 4], [0, 3, 7, 4],
+                               [1, 2, 6, 5], [2, 3, 7, 6], [4, 5, 6, 7]])
+
+    @staticmethod
+    def hosohedron(n, center_faces = False):
+        edges = []
+        pos = {}
+        pin = pi/n if center_faces else pi/(2*n-1)
+        for e in Integers(n):
+            for f in HORIZONTAL_LABELS:
+                edges.append((('u', e, f), ('d', e, f), VERTEX))
+            for v in VERTICAL_LABELS:
+                edges.append(((v, e, 'r'), (v, e+1, 'l'), EDGE))
+                edges.append(((v, e, 'r'), (v, e, 'l'), FACE))
+            i = 2*Integer(e)
+            if center_faces:
+                pos['u', e, 'l'] = (N(n*cos(i*pin)), N(n*sin(i*pin)))
+                pos['u', e, 'r'] = (N(n*cos((i+1)*pin)), N(n*sin((i+1)*pin)))
+                pos['d', e, 'l'] = (N((n-1)*cos(i*pin)), N((n-1)*sin(i*pin)))
+                pos['d', e, 'r'] = (N((n-1)*cos((i+1)*pin)),
+                                    N((n-1)*sin((i+1)*pin)))
+            else:
+                pos['u', e, 'l'] = (N(-n*cos(i*pin)), N(n*(1-sin(i*pin))))
+                pos['u', e, 'r'] = (N(-n*cos((i+1)*pin)),
+                                    N(n*(1-sin((i+1)*pin))))
+                pos['d', e, 'l'] = (N(-n*cos(i*pin)), N(n*(sin(i*pin)-1)))
+                pos['d', e, 'r'] = (N(-n*cos((i+1)*pin)),
+                                    N(n*(sin((i+1)*pin)-1)))
+        return Tiling(edges, pos = pos,
+                      vertex_fun = first,
+                      edge_fun = second,
+                      face_fun = hosohedralFaceFunction)
+
+    @staticmethod
+    def icosahedron():
+        I = graphs.IcosahedralGraph()
+        I._pos[3] = (15*S3, -7.5)
+        I._pos[9] = (0, 15)
+        I._pos[10] = (-15*S3, -7.5)
+        return Tiling(skeleton = I,
+                      faces = [[0, 1, 5], [0, 1, 8], [0, 5, 11], [0, 7, 11],
+                               [0, 7, 8], [1, 2, 6], [1, 2, 8], [4, 10, 11],
+                               [1, 5, 6], [2, 3, 6], [2, 3, 9], [7, 10, 11],
+                               [2, 8, 9], [3, 4, 6], [3, 4, 10], [3, 9, 10],
+                               [4, 5, 6], [4, 5, 11], [7, 8, 9], [7, 9, 10]])
+
+    @staticmethod
+    def octahedron():
+        return Tiling(skeleton = graphs.OctahedralGraph(),
+                      faces = [[0, 1, 2], [0, 1, 3], [0, 2, 4], [0, 3, 4],
+                               [1, 2, 5], [1, 3, 5], [2, 4, 5], [3, 4, 5]])
+
+    @staticmethod
+    def polygon(n, center_faces = True):
+        return Sphere.hosohedron(n, center_faces = center_faces).dual()
+
+    @staticmethod
+    def tetrahedron():
+        return Tiling(skeleton = graphs.TetrahedralGraph(),
+                      faces = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]])
 
 class Torus(Surface):
     @staticmethod

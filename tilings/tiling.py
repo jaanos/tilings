@@ -63,7 +63,7 @@ class Tiling(Graph):
             face_fun = lambda (u, v, f): f
             self._muscles = Graph(blades.values(), **NONSIMPLE)
         kargs["loops"] = False
-        kargs["multiedges"] = False
+        kargs["multiedges"] = True
         kargs["immutable"] = False
         edge_labels = kargs.pop("edge_labels", None)
         G = Graph(*largs, **kargs)
@@ -73,32 +73,38 @@ class Tiling(Graph):
                 G.set_edge_label(u, v, l)
         assert all(l in LABELS for l in G.edge_labels()), \
             "improper labels used"
-        assert all(frozenset(G.edge_label(u, v) for v in G[u]) == LABELS
-                   for u in G), "edges not labelled properly"
+        assert all(frozenset(sum((G.edge_label(u, v) for v in G[u]),
+                                 [])) == LABELS for u in G), \
+            "edges not labelled properly"
         edge_graph = Graph([(u, v) for u, v, l in G.edges() if l != EDGE])
         assert edge_graph.connected_components_number() * 4 == G.order(), \
             "involutions not commuting properly"
-        Graph.__init__(self, G, immutable = True)
-        if vertex_fun is None:
-            self._vertex_fun = frozenset
-        elif self._vertex_fun is None:
-            self._vertex_fun = lambda v: vertex_fun(next(iter(v)))
-        if edge_fun is None:
-            self._edge_fun = frozenset
-        elif self._edge_fun is None:
-            self._edge_fun = lambda e: edge_fun(next(iter(e)))
-        if face_fun is None:
-            self._face_fun = frozenset
-        elif self._face_fun is None:
-            self._face_fun = lambda f: face_fun(next(iter(f)))
+        Graph.__init__(self, G, immutable = True, multiedges = True)
+        if self._vertex_fun is None:
+            if vertex_fun is None:
+                self._vertex_fun = frozenset
+            else:
+                self._vertex_fun = lambda v: vertex_fun(next(iter(v)))
+        if self._edge_fun is None:
+            if edge_fun is None:
+                self._edge_fun = frozenset
+            else:
+                self._edge_fun = lambda e: edge_fun(next(iter(e)))
+        if self._face_fun is None:
+            if face_fun is None:
+                self._face_fun = frozenset
+            else:
+                self._face_fun = lambda f: face_fun(next(iter(f)))
         self._vertices = {self._vertex_fun(x): frozenset(x) for x
                           in Graph([(u, v) for u, v, l in G.edges()
-                                if l != VERTEX]).connected_components()}
+                                    if l != VERTEX],
+                                   multiedges = True).connected_components()}
         self._edges = {self._edge_fun(x): frozenset(x) for x
                        in edge_graph.connected_components()}
         self._faces = {self._face_fun(x): frozenset(x) for x
                        in Graph([(u, v) for u, v, l in G.edges()
-                                 if l != FACE]).connected_components()}
+                                 if l != FACE],
+                                 multiedges = True).connected_components()}
         if self._skeleton is None:
             self._skeleton = Graph([makeEdge([v for v, s
                                               in self._vertices.items()
@@ -181,7 +187,7 @@ class Tiling(Graph):
 
     def graphplot(self, *largs, **kargs):
         if kargs.get("edge_colors") is None:
-            kargs["edge_colors"] = {c: [(u, v) for u, v, l in self.edges()
+            kargs["edge_colors"] = {c: [(u, v, l) for u, v, l in self.edges()
                                         if l == t]
                                     for t, c in EDGE_COLORS.items()}
         return Graph.graphplot(self, *largs, **kargs)

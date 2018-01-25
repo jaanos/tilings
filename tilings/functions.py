@@ -7,6 +7,10 @@ from .constants import HORIZONTAL_LABELS, VERTICAL_LABELS
 
 makeEdge = lambda e: e*2 if len(e) == 1 else e
 
+first = lambda x: x[0]
+
+second = lambda x: x[1]
+
 def meanpos(G, l):
     return tuple(sum(p) / float(len(p))
                  for p in zip(*(G._pos[x] for x in l)))
@@ -94,6 +98,8 @@ def triangularPosition(v, a, f, wrap = None):
     i = Integer(i)
     j = Integer(j)
     return (i - j/2, -j * S3)
+
+hosohedralFaceFunction = lambda (v, e, f): e if f == 'r' else e-1
 
 def kleinBottleSquareEdgeFunction1((v, e, f)):
     i, j = v

@@ -99,7 +99,7 @@ def triangularPosition(v, a, f, wrap = None):
     j = Integer(j)
     return (i - j/2, -j * S3)
 
-hosohedralFaceFunction = lambda (v, e, f): e if f == 'r' else e-1
+hosohedralFaceFunction = lambda x: x[-2] if x[-1] == 'r' else x[-2]-1
 
 def kleinBottleSquareEdgeFunction1((v, e, f)):
     i, j = v

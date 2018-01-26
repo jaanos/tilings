@@ -3,8 +3,8 @@ from sage.functions.trig import cos, sin
 from sage.graphs.graph_generators import graphs
 from sage.misc.functional import numerical_approx as N
 from sage.rings.integer import Integer
-from .constants import S2, S3, VERTEX, EDGE, FACE
-from .constants import HEXAHEDRON_POS
+from .constants import R, S2, S3, VERTEX, EDGE, FACE
+from .constants import HEXAHEDRON_POS, HEMIHEXAHEDRAL_FACES
 from .constants import DODECAGON, DODECAGON2, OCTAGON
 from .constants import HORIZONTAL_LABELS, VERTICAL_LABELS
 from .constants import TRIANGULAR_ARCS, SQUARE_FLAGS
@@ -115,6 +115,71 @@ class Sphere(Surface):
     def tetrahedron():
         return Tiling(skeleton = graphs.TetrahedralGraph(),
                       faces = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]])
+
+class ProjectivePlane(Surface):
+    @staticmethod
+    def hemidodecahedron():
+        return Tiling(skeleton = graphs.PetersenGraph(),
+                      faces = [[0, 1, 2, 3, 4], [0, 1, 6, 8, 5],
+                               [0, 4, 9, 7, 5], [1, 2, 7, 9, 6],
+                               [2, 3, 8, 5, 7], [3, 4, 9, 6, 8]])
+
+    @staticmethod
+    def hemihexahedron():
+        H = Tiling(skeleton = graphs.TetrahedralGraph(),
+                   faces = HEMIHEXAHEDRAL_FACES)
+        pos = {}
+        for f, c in enumerate(HEMIHEXAHEDRAL_FACES):
+            phi = 2*f*pi/3
+            cx = N(R * cos(phi))
+            cy = N(R * sin(phi))
+            for i in range(4):
+                pos[c[i-1], c[i], f] = (cx + cos(phi + (1+4*i)*pi/8),
+                                        cy + sin(phi + (1+4*i)*pi/8))
+                pos[c[i], c[i-1], f] = (cx + cos(phi + (3+4*i)*pi/8),
+                                        cy + sin(phi + (3+4*i)*pi/8))
+        H.set_pos(pos)
+        return H
+
+    @staticmethod
+    def hemihosohedron(n):
+        edges = []
+        pos = {}
+        phi = pi/2 if n == 1 else pi
+        for e in Integers(n):
+            i = 4*Integer(e)
+            phl, phr = (i-1)*phi/(2*n), (i+1)*phi/(2*n)
+            ru = n + (1 + sin(phr/2))/2
+            lu = n + (1 + sin(phl/2))/2
+            rd = n + (1 - sin(phr/2))/2
+            ld = n + (1 - sin(phl/2))/2
+            varcs, lu, ld = (reversed(VERTICAL_LABELS), ld, lu) if e == 0 \
+                       else (VERTICAL_LABELS, lu, ld)
+            for h in HORIZONTAL_LABELS:
+                edges.append((('u', e, h), ('d', e, h), VERTEX))
+            for v, ver in zip(VERTICAL_LABELS, varcs):
+                edges.append(((v, e, 'r'), (v, e+1, 'l'), EDGE))
+                edges.append(((v, e, 'r'), (ver, e, 'l'), FACE))
+            pos['u', e, 'r'] = (N(ru*cos(phr)), N(ru*sin(phr)))
+            pos['u', e, 'l'] = (N(ru*cos(phl)), N(ru*sin(phl)))
+            pos['d', e, 'r'] = (N(rd*cos(phr)), N(rd*sin(phr)))
+            pos['d', e, 'l'] = (N(rd*cos(phl)), N(rd*sin(phl)))
+        return Tiling(edges, pos = pos,
+                      vertex_fun = lambda x: (),
+                      edge_fun = second,
+                      face_fun = hosohedralFaceFunction)
+
+    @staticmethod
+    def hemiicosahedron():
+        return ProjectivePlane.hemidodecahedron().dual()
+
+    @staticmethod
+    def hemioctahedron():
+        return ProjectivePlane.hemihexahedron().dual()
+
+    @staticmethod
+    def hemipolygon(n):
+        return ProjectivePlane.hemihosohedron(n).dual()
 
 class Torus(Surface):
     @staticmethod

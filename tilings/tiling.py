@@ -116,12 +116,7 @@ class Tiling(Graph):
                                    for e, t in self._edges.items()],
                                   **NONSIMPLE)
             if self._pos is not None:
-                self._skeleton._pos = {}
-                self._muscles._pos = {}
-                for v in self._skeleton:
-                    self._skeleton._pos[v] = meanpos(self, self._vertices[v])
-                for f in self._muscles:
-                    self._muscles._pos[f] = meanpos(self, self._faces[f])
+                self._reposition()
         elif self._dual is not None:
             if self._dual._pos is not None:
                 self._pos = dict(self._dual._pos)
@@ -218,6 +213,18 @@ class Tiling(Graph):
         return G.relabel(perm, inplace = inplace, return_map = return_map,
                          check_input = check_input, immutable = immutable,
                          complete_partial_function = complete_partial_function)
+
+    def _reposition(self):
+        self._skeleton._pos = {}
+        self._muscles._pos = {}
+        for v in self._skeleton:
+            self._skeleton._pos[v] = meanpos(self, self._vertices[v])
+        for f in self._muscles:
+            self._muscles._pos[f] = meanpos(self, self._faces[f])
+
+    def set_pos(self, pos, dim = 2):
+        Graph.set_pos(self, pos, dim = 2)
+        self._reposition()
 
     def skeleton(self):
         return self._skeleton

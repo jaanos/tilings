@@ -17,12 +17,15 @@ S2 = N(sqrt(2))
 S3 = N(sqrt(3)/2)
 C8 = N(cos(pi/8) * T)
 S8 = N(sin(pi/8) * T)
+R = N(2*T*S3 + C8/T)
 
 HEXAHEDRON_POS = {v: (N(r*cos(x)), N(r*sin(x))) for v, (r, x)
                   in enumerate((1+i//4, (2*i+1)*pi/4) for i in range(8))}
 
 HORIZONTAL_LABELS = ['r', 'l']
 VERTICAL_LABELS = ['u', 'd']
+
+HEMIHEXAHEDRAL_FACES = [[1, 0, 3, 2], [2, 0, 1, 3], [3, 0, 2, 1]]
 
 DODECAGON_FLAGS = ['au', 'Bu', 'Bd', 'cd', 'cu', 'Au',
                    'Ad', 'bd', 'bu', 'Cu', 'Cd', 'ad']

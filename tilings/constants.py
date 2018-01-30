@@ -6,9 +6,11 @@ from sage.functions.trig import cos, sin
 VERTEX = "v"
 EDGE = "e"
 FACE = "f"
+CORNER = "c"
 LABELS = frozenset([VERTEX, EDGE, FACE])
 DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}
 EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
+TRUNCATION_MAP = {VERTEX: EDGE, EDGE: VERTEX}
 NONSIMPLE = {"loops": True, "multiedges": True,
              "immutable": True, "format": 'list_of_edges'}
 

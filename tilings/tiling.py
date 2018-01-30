@@ -1,7 +1,11 @@
 from sage.graphs.graph import Graph
+from sage.misc.functional import numerical_approx as N
 from .constants import VERTEX, EDGE, FACE, LABELS, DUAL, EDGE_COLORS
-from .constants import NONSIMPLE, C8, S8
+from .constants import TRUNCATION_MAP, NONSIMPLE, C8, S8, T
 from .functions import makeEdge, meanpos
+from .functions import truncationVertexFunction
+from .functions import truncationEdgeFunction
+from .functions import truncationFaceFunction
 
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
@@ -11,9 +15,13 @@ class Tiling(Graph):
         self._edge_fun = None
         self._face_fun = None
         self._dual = kargs.pop("dual", None)
-        vertex_fun = kargs.pop("vertex_fun", None)
-        edge_fun = kargs.pop("edge_fun", None)
-        face_fun = kargs.pop("face_fun", None)
+        vertex_rep = kargs.pop("vertex_rep", True)
+        edge_rep = kargs.pop("edge_rep", True)
+        face_rep = kargs.pop("face_rep", True)
+        vertex_fun = kargs.pop("vertex_fun",
+                               None if vertex_rep else frozenset)
+        edge_fun = kargs.pop("edge_fun", None if edge_rep else frozenset)
+        face_fun = kargs.pop("face_fun", None if face_rep else frozenset)
         if self._dual is not None:
             self._skeleton = self._dual._muscles
             self._muscles = self._dual._skeleton
@@ -81,20 +89,20 @@ class Tiling(Graph):
             "involutions not commuting properly"
         Graph.__init__(self, G, immutable = True, multiedges = True)
         if self._vertex_fun is None:
-            if vertex_fun is None:
-                self._vertex_fun = frozenset
-            else:
+            if vertex_rep:
                 self._vertex_fun = lambda v: vertex_fun(next(iter(v)))
+            else:
+                self._vertex_fun = vertex_fun
         if self._edge_fun is None:
-            if edge_fun is None:
-                self._edge_fun = frozenset
-            else:
+            if edge_rep:
                 self._edge_fun = lambda e: edge_fun(next(iter(e)))
-        if self._face_fun is None:
-            if face_fun is None:
-                self._face_fun = frozenset
             else:
+                self._edge_fun = edge_fun
+        if self._face_fun is None:
+            if face_rep:
                 self._face_fun = lambda f: face_fun(next(iter(f)))
+            else:
+                self._face_fun = face_fun
         self._vertices = {self._vertex_fun(x): frozenset(x) for x
                           in Graph([(u, v) for u, v, l in G.edges()
                                     if l != VERTEX],
@@ -239,3 +247,37 @@ class Tiling(Graph):
                                                edge_property = edge_property,
                                                immutable = immutable,
                                                *largs, **kargs)
+
+    def truncation(self):
+        edges = []
+        pos = None
+        for s in self:
+            edges.append(((s, EDGE), (s, FACE), EDGE))
+            edges.append(((s, VERTEX), (s, FACE), FACE))
+        for s, t, l in self.edges(labels = True):
+            if l == VERTEX:
+                edges.append(((s, EDGE), (t, EDGE), VERTEX))
+            elif l == EDGE:
+                edges.append(((s, FACE), (t, FACE), VERTEX))
+                edges.append(((s, VERTEX), (t, VERTEX), VERTEX))
+            elif l == FACE:
+                edges.append(((s, EDGE), (t, EDGE), FACE))
+                edges.append(((s, VERTEX), (t, VERTEX), EDGE))
+        if self._pos is not None:
+            pos = {}
+            for s, t, l in self.edges(labels = True):
+                if l != FACE:
+                    for a, b in [(s, t), (t, s)]:
+                        pos[a, TRUNCATION_MAP[l]] = [N((1-T)*p + T*q)
+                                                     for p, q in
+                                                     zip(self._pos[a],
+                                                         self._pos[b])]
+            for s in self:
+                pos[s, FACE] = [p+q-r for p, q, r in
+                                zip(pos[s, VERTEX], pos[s, EDGE],
+                                    self._pos[s])]
+        return Tiling(edges, pos = pos,
+                      vertex_rep = False, edge_rep = False, face_rep = False,
+                      vertex_fun = truncationVertexFunction,
+                      edge_fun = truncationEdgeFunction(self),
+                      face_fun = truncationFaceFunction(self))

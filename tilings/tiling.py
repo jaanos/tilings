@@ -135,9 +135,10 @@ class Tiling(Graph):
                 for k, f in faces.items():
                     self._muscles._pos[k] = meanpos(self._skeleton, f)
 
-    def automorphism_group(self, partition = None, edge_labels = True,
-                           order = False, return_group = True,
-                           orbits = False, algorithm = None):
+    def automorphism_group(self, partition = None, verbosity = 0,
+                           edge_labels = True, order = False,
+                           return_group = True, orbits = False,
+                           algorithm = None):
         return Graph.automorphism_group(self, partition = partition,
                                         edge_labels = edge_labels,
                                         order = order,
@@ -188,9 +189,8 @@ class Tiling(Graph):
         return Graph.graphplot(self, *largs, **kargs)
 
     def is_isomorphic(self, other, certificate = False, edge_labels = True):
-        return Graph.is_vertex_transitive(self, other,
-                                          certificate = certificate,
-                                          edge_labels = edge_labels)
+        return Graph.is_isomorphic(self, other, certificate = certificate,
+                                   edge_labels = edge_labels)
 
     def is_vertex_transitive(self, partition = None, edge_labels = True,
                              order = False, return_group = True,

@@ -1,5 +1,6 @@
 from sage.graphs.graph import Graph
 from sage.misc.functional import numerical_approx as N
+from sage.sets.set import Set
 from .constants import VERTEX, EDGE, FACE, BLADE, CORNER
 from .constants import LABELS, DUAL, EDGE_COLORS
 from .constants import TRUNCATION_MAP, NONSIMPLE, T
@@ -18,9 +19,9 @@ class Tiling(Graph):
         edge_rep = kargs.pop("edge_rep", True)
         face_rep = kargs.pop("face_rep", True)
         vertex_fun = kargs.pop("vertex_fun",
-                               None if vertex_rep else frozenset)
-        edge_fun = kargs.pop("edge_fun", None if edge_rep else frozenset)
-        face_fun = kargs.pop("face_fun", None if face_rep else frozenset)
+                               None if vertex_rep else Set)
+        edge_fun = kargs.pop("edge_fun", None if edge_rep else Set)
+        face_fun = kargs.pop("face_fun", None if face_rep else Set)
         if self._dual is not None:
             self._skeleton = self._dual._muscles
             self._muscles = self._dual._skeleton
@@ -42,11 +43,11 @@ class Tiling(Graph):
             assert self._skeleton.order() > 1, \
                 "skeleton should have at least two vertices"
             edges = []
-            blades = {frozenset(e): [] for e
+            blades = {Set(e): [] for e
                       in self._skeleton.edges(labels = False)}
             for f, l in faces.items():
                 for i in range(len(l)):
-                    e = frozenset([l[i-1], l[i]])
+                    e = Set([l[i-1], l[i]])
                     assert e in blades, "edge %s not in skeleton" % tuple(e)
                     if len(blades[e]) == 1:
                         g, = blades[e]
@@ -66,7 +67,7 @@ class Tiling(Graph):
                 "not all edges lie on two faces"
             kargs["data"] = edges
             vertex_fun = lambda (u, v, f): u
-            edge_fun = lambda (u, v, f): frozenset([u, v])
+            edge_fun = lambda (u, v, f): Set([u, v])
             face_fun = lambda (u, v, f): f
             self._muscles = Graph(blades.values(), **NONSIMPLE)
         kargs["loops"] = False
@@ -80,8 +81,8 @@ class Tiling(Graph):
                 G.set_edge_label(u, v, l)
         assert all(l in LABELS for l in G.edge_labels()), \
             "improper labels used"
-        assert all(frozenset(sum((G.edge_label(u, v) for v in G[u]),
-                                 [])) == LABELS for u in G), \
+        assert all(Set(sum((G.edge_label(u, v) for v in G[u]),
+                            [])) == LABELS for u in G), \
             "edges not labelled properly"
         edge_graph = Graph([(u, v) for u, v, l in G.edges() if l != EDGE])
         assert edge_graph.connected_components_number() * 4 == G.order(), \
@@ -102,13 +103,13 @@ class Tiling(Graph):
                 self._face_fun = lambda f: face_fun(next(iter(f)))
             else:
                 self._face_fun = face_fun
-        self._vertices = {self._vertex_fun(x): frozenset(x) for x
+        self._vertices = {self._vertex_fun(x): Set(x) for x
                           in Graph([(u, v) for u, v, l in G.edges()
                                     if l != VERTEX],
                                    multiedges = True).connected_components()}
-        self._edges = {self._edge_fun(x): frozenset(x) for x
+        self._edges = {self._edge_fun(x): Set(x) for x
                        in edge_graph.connected_components()}
-        self._faces = {self._face_fun(x): frozenset(x) for x
+        self._faces = {self._face_fun(x): Set(x) for x
                        in Graph([(u, v) for u, v, l in G.edges()
                                  if l != FACE],
                                  multiedges = True).connected_components()}

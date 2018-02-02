@@ -1,4 +1,5 @@
 from sage.rings.integer import Integer
+from sage.sets.set import Set
 from .constants import VERTEX, EDGE, FACE, CORNER, S3, S8, C8
 from .constants import DODECAGON_WRAP, DODECAGON_SWAP
 from .constants import DODECAGON2_WRAP, DODECAGON2_SWAP
@@ -261,6 +262,6 @@ def triangularFaceFunction(k):
         return (v, f)
     return faceFun
 
-truncationVertexFunction = lambda s: frozenset(p for p, l in s)
+truncationVertexFunction = lambda s: Set(p for p, l in s)
 
 vertexFunction = lambda (v, e, f): v

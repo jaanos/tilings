@@ -1,7 +1,8 @@
 from sage.all import cartesian_product, pi
-from sage.misc.functional import numerical_approx as N
 from sage.functions.other import sqrt
 from sage.functions.trig import cos, sin
+from sage.misc.functional import numerical_approx as N
+from sage.sets.set import Set
 
 VERTEX = "v"
 EDGE = "e"
@@ -9,7 +10,7 @@ FACE = "f"
 ARC = "a"
 BLADE = "b"
 CORNER = "c"
-LABELS = frozenset([VERTEX, EDGE, FACE])
+LABELS = Set([VERTEX, EDGE, FACE])
 DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}
 EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
 TRUNCATION_MAP = {VERTEX: EDGE, EDGE: VERTEX}

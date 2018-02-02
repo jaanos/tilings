@@ -14,8 +14,6 @@ LABELS = Set([VERTEX, EDGE, FACE])
 DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}
 EDGE_COLORS = {VERTEX: "red", EDGE: "green", FACE: "blue"}
 TRUNCATION_MAP = {VERTEX: EDGE, EDGE: VERTEX}
-NONSIMPLE = {"loops": True, "multiedges": True,
-             "immutable": True, "format": 'list_of_edges'}
 
 T = sqrt(2 - sqrt(2)) / 2
 S2 = N(sqrt(2))

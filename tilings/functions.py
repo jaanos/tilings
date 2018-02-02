@@ -1,3 +1,4 @@
+from sage.graphs.graph import Graph
 from sage.rings.integer import Integer
 from sage.sets.set import Set
 from .constants import VERTEX, EDGE, FACE, CORNER, S3, S8, C8
@@ -11,6 +12,15 @@ makeEdge = lambda e: e*2 if len(e) == 1 else e
 first = lambda x: x[0]
 
 second = lambda x: x[1]
+
+def simplestGraph(edges):
+    G = Graph(edges, loops = True, multiedges = True, immutable = True,
+              format = 'list_of_edges')
+    loops = G.has_loops()
+    multiedges = G.has_multiple_edges()
+    if not (loops and multiedges):
+        G = Graph(G, immutable = True, loops = loops, multiedges = multiedges)
+    return G
 
 def meanpos(G, l):
     return tuple(sum(p) / float(len(p))

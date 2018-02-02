@@ -3,8 +3,8 @@ from sage.misc.functional import numerical_approx as N
 from sage.sets.set import Set
 from .constants import VERTEX, EDGE, FACE, BLADE, CORNER
 from .constants import LABELS, DUAL, EDGE_COLORS
-from .constants import TRUNCATION_MAP, NONSIMPLE, T
-from .functions import makeEdge, meanpos, flagPosition
+from .constants import TRUNCATION_MAP, T
+from .functions import makeEdge, simplestGraph, meanpos, flagPosition
 from .functions import truncationVertexFunction
 
 class Tiling(Graph):
@@ -69,7 +69,7 @@ class Tiling(Graph):
             vertex_fun = lambda (u, v, f): u
             edge_fun = lambda (u, v, f): Set([u, v])
             face_fun = lambda (u, v, f): f
-            self._muscles = Graph(blades.values(), **NONSIMPLE)
+            self._muscles = simplestGraph(blades.values())
         kargs["loops"] = False
         kargs["multiedges"] = True
         kargs["immutable"] = False
@@ -87,7 +87,8 @@ class Tiling(Graph):
         edge_graph = Graph([(u, v) for u, v, l in G.edges() if l != EDGE])
         assert edge_graph.connected_components_number() * 4 == G.order(), \
             "involutions not commuting properly"
-        Graph.__init__(self, G, immutable = True, multiedges = True)
+        Graph.__init__(self, G, immutable = True,
+                       multiedges = G.has_multiple_edges())
         if self._vertex_fun is None:
             if vertex_rep:
                 self._vertex_fun = lambda v: vertex_fun(next(iter(v)))
@@ -114,15 +115,14 @@ class Tiling(Graph):
                                  if l != FACE],
                                  multiedges = True).connected_components()}
         if self._skeleton is None:
-            self._skeleton = Graph([makeEdge([v for v, s
-                                              in self._vertices.items()
-                                              if len(s & t) > 0])
-                                    for e, t in self._edges.items()],
-                                   **NONSIMPLE)
-            self._muscles = Graph([makeEdge([f for f, s in self._faces.items()
-                                             if len(s & t) > 0])
-                                   for e, t in self._edges.items()],
-                                  **NONSIMPLE)
+            self._skeleton = simplestGraph([makeEdge([v for v, s in
+                                                      self._vertices.items()
+                                                      if len(s & t) > 0])
+                                            for e, t in self._edges.items()])
+            self._muscles = simplestGraph([makeEdge([f for f, s in
+                                                     self._faces.items()
+                                                     if len(s & t) > 0])
+                                           for e, t in self._edges.items()])
             if self._pos is not None:
                 self._reposition()
         elif self._dual is not None:

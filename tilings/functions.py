@@ -1,5 +1,5 @@
 from sage.rings.integer import Integer
-from .constants import VERTEX, EDGE, FACE, CORNER, S3
+from .constants import VERTEX, EDGE, FACE, CORNER, S3, S8, C8
 from .constants import DODECAGON_WRAP, DODECAGON_SWAP
 from .constants import DODECAGON2_WRAP, DODECAGON2_SWAP
 from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
@@ -14,6 +14,10 @@ second = lambda x: x[1]
 def meanpos(G, l):
     return tuple(sum(p) / float(len(p))
                  for p in zip(*(G._pos[x] for x in l)))
+
+flagPosition = lambda pu, pv, pw: tuple((1-C8-S8) * a +
+                                        C8 * b + S8 * c
+                                        for a, b, c in zip(pu, pv, pw))
 
 def kleinBottleSquarePosition1(v, a, f, wrap = None):
     i, j = v
@@ -258,25 +262,5 @@ def triangularFaceFunction(k):
     return faceFun
 
 truncationVertexFunction = lambda s: frozenset(p for p, l in s)
-
-def truncationEdgeFunction(t):
-    def edgeFun(s):
-        p, l = next(iter(s))
-        r = truncationVertexFunction(s)
-        if l == EDGE:
-            return (t._edge_fun(r), EDGE)
-        else:
-            return (r, CORNER)
-    return edgeFun
-
-def truncationFaceFunction(t):
-    def faceFun(s):
-        p, l = next(iter(s))
-        r = truncationVertexFunction(s)
-        if l == VERTEX:
-            return (t._vertex_fun(r), VERTEX)
-        else:
-            return (t._face_fun(r), FACE)
-    return faceFun
 
 vertexFunction = lambda (v, e, f): v

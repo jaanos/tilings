@@ -1,11 +1,10 @@
 from sage.graphs.graph import Graph
 from sage.misc.functional import numerical_approx as N
-from .constants import VERTEX, EDGE, FACE, LABELS, DUAL, EDGE_COLORS
-from .constants import TRUNCATION_MAP, NONSIMPLE, C8, S8, T
-from .functions import makeEdge, meanpos
+from .constants import VERTEX, EDGE, FACE, BLADE, CORNER
+from .constants import LABELS, DUAL, EDGE_COLORS
+from .constants import TRUNCATION_MAP, NONSIMPLE, T
+from .functions import makeEdge, meanpos, flagPosition
 from .functions import truncationVertexFunction
-from .functions import truncationEdgeFunction
-from .functions import truncationFaceFunction
 
 class Tiling(Graph):
     def __init__(self, *largs, **kargs):
@@ -135,9 +134,7 @@ class Tiling(Graph):
                     w = next(y for x, y, z in self[u, v, f]
                              if (x, z) == (u, f))
                     pu, pv, pw = (self._skeleton._pos[x] for x in (u, v, w))
-                    self._pos[u, v, f] = tuple((1-C8-S8) * a +
-                                               C8 * b + S8 * c
-                                               for a, b, c in zip(pu, pv, pw))
+                    self._pos[u, v, f] = flagPosition(pu, pv, pw)
             if self._muscles._pos is None:
                 self._muscles._pos = {}
                 for k, f in faces.items():
@@ -162,6 +159,84 @@ class Tiling(Graph):
                                      edge_labels = edge_labels,
                                      algorithm = algorithm,
                                      return_graph = return_graph)
+
+    def chamfer(self):
+        edges = []
+        for s in self:
+            edges.append(((s, FACE), (s, EDGE), FACE))
+            edges.append(((s, CORNER), (s, EDGE), EDGE))
+            edges.append(((s, CORNER), (s, VERTEX), VERTEX))
+        for s, t, l in self.edges(labels = True):
+            if l == VERTEX:
+                edges.append(((s, EDGE), (t, EDGE), VERTEX))
+                edges.append(((s, FACE), (t, FACE), VERTEX))
+            elif l == EDGE:
+                edges.append(((s, VERTEX), (t, VERTEX), FACE))
+                edges.append(((s, CORNER), (t, CORNER), FACE))
+                edges.append(((s, FACE), (t, FACE), EDGE))
+            elif l == FACE:
+                edges.append(((s, VERTEX), (t, VERTEX), EDGE))
+        return Tiling(edges, pos = self._chamferPosition(),
+                      vertex_rep = False, edge_rep = False, face_rep = False,
+                      vertex_fun = self._chamferVertexFunction,
+                      edge_fun = self._chamferEdgeFunction,
+                      face_fun = self._chamferFaceFunction)
+
+    def _chamferVertexFunction(self, s):
+        p, l = next(iter(s))
+        r = truncationVertexFunction(s)
+        if l == VERTEX:
+            return (self._vertex_fun(r), VERTEX)
+        else:
+            return (r, CORNER)
+
+    def _chamferEdgeFunction(self, s):
+        p, l = next(iter(s))
+        r = truncationVertexFunction(s)
+        if l in [VERTEX, CORNER]:
+            return (r, CORNER)
+        else:
+            return (r, BLADE)
+
+    def _chamferFaceFunction(self, s):
+        p, l = next(iter(s))
+        r = truncationVertexFunction(s)
+        if l == FACE:
+            return (self._face_fun(r), FACE)
+        else:
+            return (r, EDGE)
+
+    def _chamferPosition(self):
+        if self._pos is None:
+            return None
+        vertex = {}
+        neigh = {}
+        vpos = {}
+        pos = {(s, VERTEX): p for s, p in self._pos.items()}
+        for v, c in self._vertices.items():
+            for t in c:
+                vertex[t] = v
+        for s, t, l in self.edges(labels = True):
+            for r in [s, t]:
+                if r not in neigh:
+                    neigh[r] = {}
+            neigh[s][l] = t
+            neigh[t][l] = s
+            if l == EDGE:
+                x = [p+q-r for p, q, r in zip(self._pos[s], self._pos[t],
+                                              self._skeleton._pos[vertex[s]])]
+                vpos[s] = x
+                vpos[t] = x
+        for s in self:
+            n = neigh[s]
+            p = vpos[s]
+            q = vpos[neigh[s][VERTEX]]
+            r = self._skeleton._pos[vertex[s]]
+            pos[s, CORNER] = flagPosition(p, r, q)
+            pos[s, EDGE] = flagPosition(p, q, r)
+            pos[s, FACE] = flagPosition(p, q,
+                                        vpos[neigh[neigh[s][EDGE]][VERTEX]])
+        return pos
 
     def characteristic(self):
         return self._skeleton.order() - self._skeleton.size() + \
@@ -279,5 +354,21 @@ class Tiling(Graph):
         return Tiling(edges, pos = pos,
                       vertex_rep = False, edge_rep = False, face_rep = False,
                       vertex_fun = truncationVertexFunction,
-                      edge_fun = truncationEdgeFunction(self),
-                      face_fun = truncationFaceFunction(self))
+                      edge_fun = self._truncationEdgeFunction,
+                      face_fun = self._truncationFaceFunction)
+
+    def _truncationEdgeFunction(self, s):
+        p, l = next(iter(s))
+        r = truncationVertexFunction(s)
+        if l == EDGE:
+            return (self._edge_fun(r), EDGE)
+        else:
+            return (r, CORNER)
+
+    def _truncationFaceFunction(self, s):
+        p, l = next(iter(s))
+        r = truncationVertexFunction(s)
+        if l == VERTEX:
+            return (self._vertex_fun(r), VERTEX)
+        else:
+            return (self._face_fun(r), FACE)

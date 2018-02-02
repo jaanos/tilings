@@ -6,6 +6,8 @@ from sage.functions.trig import cos, sin
 VERTEX = "v"
 EDGE = "e"
 FACE = "f"
+ARC = "a"
+BLADE = "b"
 CORNER = "c"
 LABELS = frozenset([VERTEX, EDGE, FACE])
 DUAL = {VERTEX: FACE, EDGE: EDGE, FACE: VERTEX}

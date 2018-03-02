@@ -50,6 +50,22 @@ class Sphere(Surface):
                                [3, 4, 17, 18, 19], [5, 6, 7, 14, 15],
                                [4, 5, 15, 16, 17], [7, 8, 9, 13, 14]])
 
+    greatStellatedDodecahedron = dodecahedron
+
+    @staticmethod
+    def greatDodecahedron():
+        I = graphs.IcosahedralGraph()
+        I._pos[3] = (15*S3, -7.5)
+        I._pos[9] = (0, 15)
+        I._pos[10] = (-15*S3, -7.5)
+        return Tiling(skeleton = I,
+                      faces = [[0, 1, 2, 9, 7], [0, 8, 9, 10, 11],
+                               [0, 1, 6, 4, 11], [0, 5, 6, 2, 8],
+                               [0, 5, 4, 10, 7], [3, 6, 5, 11, 10],
+                               [1, 2, 3, 4, 5], [1, 5, 11, 7, 8],
+                               [2, 3, 10, 7, 8], [2, 6, 4, 10, 9],
+                               [1, 6, 3, 9, 8], [3, 4, 11, 7, 9]])
+
     @staticmethod
     def hexahedron():
         H = graphs.HexahedralGraph()
@@ -101,6 +117,8 @@ class Sphere(Surface):
                                [2, 8, 9], [3, 4, 6], [3, 4, 10], [3, 9, 10],
                                [4, 5, 6], [4, 5, 11], [7, 8, 9], [7, 9, 10]])
 
+    greatIcosahedron = icosahedron
+
     @staticmethod
     def octahedron():
         return Tiling(skeleton = graphs.OctahedralGraph(),
@@ -110,6 +128,10 @@ class Sphere(Surface):
     @staticmethod
     def polygon(n, center_faces = True):
         return Sphere.hosohedron(n, center_faces = center_faces).dual()
+
+    @staticmethod
+    def smallStellatedDodecahedron():
+        return Sphere.greatDodecahedron().dual()
 
     @staticmethod
     def tetrahedron():

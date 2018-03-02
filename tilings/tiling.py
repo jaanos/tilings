@@ -307,7 +307,7 @@ class Tiling(Graph):
             self._muscles._pos[f] = meanpos(self, self._faces[f])
 
     def set_pos(self, pos, dim = 2):
-        Graph.set_pos(self, pos, dim = 2)
+        Graph.set_pos(self, pos, dim = dim)
         self._reposition()
 
     def skeleton(self):

@@ -317,6 +317,9 @@ class Tiling(Graph):
         return Graph.is_isomorphic(self, other, certificate = certificate,
                                    edge_labels = edge_labels)
 
+    def is_orientable(self):
+        return self.is_bipartite()
+
     def is_vertex_transitive(self, partition = None, edge_labels = True,
                              order = False, return_group = True,
                              orbits = False):

@@ -1,7 +1,7 @@
 from sage.graphs.graph import Graph
 from sage.misc.functional import numerical_approx as N
 from sage.sets.set import Set
-from .constants import VERTEX, EDGE, FACE, BLADE, CORNER
+from .constants import VERTEX, EDGE, FACE, ARC, BLADE, CORNER
 from .constants import LABELS, DUAL, EDGE_COLORS
 from .constants import TRUNCATION_MAP, T
 from .functions import makeEdge, simplestGraph, meanpos, flagPosition
@@ -161,6 +161,45 @@ class Tiling(Graph):
                                      algorithm = algorithm,
                                      return_graph = return_graph)
 
+    def cantellation(self):
+        edges = []
+        for s in self:
+            edges.append(((s, FACE), (s, BLADE), FACE))
+            edges.append(((s, BLADE), (s, ARC), EDGE))
+            edges.append(((s, ARC), (s, VERTEX), FACE))
+        for s, t, l in self.edges(labels = True):
+            if l == VERTEX:
+                edges.append(((s, BLADE), (t, BLADE), VERTEX))
+                edges.append(((s, FACE), (t, FACE), VERTEX))
+            elif l == EDGE:
+                edges.append(((s, VERTEX), (t, VERTEX), EDGE))
+                edges.append(((s, FACE), (t, FACE), EDGE))
+            elif l == FACE:
+                edges.append(((s, VERTEX), (t, VERTEX), VERTEX))
+                edges.append(((s, ARC), (t, ARC), VERTEX))
+        return Tiling(edges, pos = self._chamferPosition(el = BLADE,
+                                                         cl = ARC),
+                      vertex_rep = False, edge_rep = False, face_rep = False,
+                      vertex_fun = truncationVertexFunction,
+                      edge_fun = self._cantellationEdgeFunction,
+                      face_fun = self._cantellationFaceFunction)
+
+    def _cantellationEdgeFunction(self, s):
+        p, l = next(iter(s))
+        r = truncationVertexFunction(s)
+        if l in [VERTEX, ARC]:
+            return (r, VERTEX)
+        else:
+            return (r, EDGE)
+
+    def _cantellationFaceFunction(self, s):
+        p, l = next(iter(s))
+        r = truncationVertexFunction(s)
+        if l in [ARC, BLADE]:
+            return (r, EDGE)
+        else:
+            return (r, l)
+
     def chamfer(self):
         edges = []
         for s in self:
@@ -207,13 +246,14 @@ class Tiling(Graph):
         else:
             return (r, EDGE)
 
-    def _chamferPosition(self):
+    def _chamferPosition(self, vl = VERTEX, cl = CORNER, el = EDGE,
+                         fl = FACE):
         if self._pos is None:
             return None
         vertex = {}
         neigh = {}
         vpos = {}
-        pos = {(s, VERTEX): p for s, p in self._pos.items()}
+        pos = {(s, vl): p for s, p in self._pos.items()}
         for v, c in self._vertices.items():
             for t in c:
                 vertex[t] = v
@@ -233,10 +273,10 @@ class Tiling(Graph):
             p = vpos[s]
             q = vpos[neigh[s][VERTEX]]
             r = self._skeleton._pos[vertex[s]]
-            pos[s, CORNER] = flagPosition(p, r, q)
-            pos[s, EDGE] = flagPosition(p, q, r)
-            pos[s, FACE] = flagPosition(p, q,
-                                        vpos[neigh[neigh[s][EDGE]][VERTEX]])
+            pos[s, cl] = flagPosition(p, r, q)
+            pos[s, el] = flagPosition(p, q, r)
+            pos[s, fl] = flagPosition(p, q,
+                                      vpos[neigh[neigh[s][EDGE]][VERTEX]])
         return pos
 
     def characteristic(self):

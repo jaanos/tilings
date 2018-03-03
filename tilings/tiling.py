@@ -288,6 +288,35 @@ class Tiling(Graph):
     def muscles(self):
         return self._muscles
 
+    def rectification(self):
+        edges = []
+        pos = None
+        for s in self:
+            edges.append(((s, VERTEX), (s, FACE), FACE))
+        for s, t, l in self.edges(labels = True):
+            if l == VERTEX:
+                edges.append(((s, FACE), (t, FACE), EDGE))
+            elif l == EDGE:
+                edges.append(((s, FACE), (t, FACE), VERTEX))
+                edges.append(((s, VERTEX), (t, VERTEX), VERTEX))
+            elif l == FACE:
+                edges.append(((s, VERTEX), (t, VERTEX), EDGE))
+        if self._pos is not None:
+            pos = {}
+            for s, t, l in self.edges(labels = True):
+                if l != EDGE:
+                    for a, b in [(s, t), (t, s)]:
+                        pos[a, DUAL[l]] = [N((1-T)*p + T*q) for p, q in
+                                           zip(self._pos[a], self._pos[b])]
+        return Tiling(edges, pos = pos,
+                      vertex_rep = False, edge_rep = False, face_rep = False,
+                      vertex_fun = self._rectificationVertexFunction,
+                      edge_fun = truncationVertexFunction,
+                      face_fun = self._truncationFaceFunction)
+
+    def _rectificationVertexFunction(self, s):
+        return self._edge_fun(truncationVertexFunction(s))
+
     def relabel(self, perm = None, inplace = True, return_map = False,
                 check_input = True, complete_partial_function = True,
                 immutable = True):

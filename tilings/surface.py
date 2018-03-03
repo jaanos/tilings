@@ -9,7 +9,7 @@ from .constants import DODECAGON, DODECAGON2, OCTAGON
 from .constants import HORIZONTAL_LABELS, VERTICAL_LABELS
 from .constants import TRIANGULAR_ARCS, SQUARE_FLAGS
 from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
-from functions import first, second
+from functions import empty, first, second
 from functions import hosohedralFaceFunction
 from functions import kleinBottleSquareEdgeFunction1
 from functions import kleinBottleSquareFaceFunction1
@@ -32,7 +32,6 @@ from functions import squarePosition
 from functions import triangularEdgeFunction
 from functions import triangularFaceFunction
 from functions import triangularPosition
-from functions import vertexFunction
 from .tiling import Tiling
 
 class Surface:
@@ -165,7 +164,7 @@ class ProjectivePlane(Surface):
             pos['d', e, 'r'] = (N(rd*cos(phr)), N(rd*sin(phr)))
             pos['d', e, 'l'] = (N(rd*cos(phl)), N(rd*sin(phl)))
         return Tiling(edges, pos = pos,
-                      vertex_fun = lambda x: (),
+                      vertex_fun = empty,
                       edge_fun = second,
                       face_fun = hosohedralFaceFunction)
 
@@ -210,7 +209,7 @@ class Torus(Surface):
             for (e, f), q in OCTAGON.items():
                 pos[v, e, f] = [sum(p) for p in zip(squarePosition(v), q)]
         return Tiling(edges, pos = pos,
-                      vertex_fun = vertexFunction,
+                      vertex_fun = first,
                       edge_fun = squareEdgeFunction(k),
                       face_fun = squareFaceFunction(k))
 
@@ -243,7 +242,7 @@ class Torus(Surface):
                                     in zip(triangularPosition(v, a, f, wrap),
                                            DODECAGON[a, f])]
         return Tiling(edges, pos = pos,
-                      vertex_fun = vertexFunction,
+                      vertex_fun = first,
                       edge_fun = triangularEdgeFunction(k),
                       face_fun = triangularFaceFunction(k))
 
@@ -286,7 +285,7 @@ class KleinBottle(Surface):
                                        kleinBottleSquareWrap1(p, v, e, f,
                                                               wrap))]
         return Tiling(edges, pos = pos,
-                      vertex_fun = vertexFunction,
+                      vertex_fun = first,
                       edge_fun = kleinBottleSquareEdgeFunction1,
                       face_fun = kleinBottleSquareFaceFunction1)
 
@@ -321,7 +320,7 @@ class KleinBottle(Surface):
                 pos[v, e, f] = [x + y * S2 for x, y
                                 in zip(squarePosition(v), q)]
         return Tiling(edges, pos = pos,
-                      vertex_fun = vertexFunction,
+                      vertex_fun = first,
                       edge_fun = kleinBottleSquareEdgeFunction2(m),
                       face_fun = kleinBottleSquareFaceFunction2(m))
 
@@ -355,7 +354,7 @@ class KleinBottle(Surface):
                                        kleinBottleTriangularWrap1(p, v, e, f,
                                                                   wrap))]
         return Tiling(edges, pos = pos,
-                      vertex_fun = vertexFunction,
+                      vertex_fun = first,
                       edge_fun = kleinBottleTriangularEdgeFunction1,
                       face_fun = kleinBottleTriangularFaceFunction1)
 
@@ -396,6 +395,6 @@ class KleinBottle(Surface):
                                        kleinBottleTriangularWrap2(p, v, e, f,
                                                                   wrap))]
         return Tiling(edges, pos = pos,
-                      vertex_fun = vertexFunction,
+                      vertex_fun = first,
                       edge_fun = kleinBottleTriangularEdgeFunction2(m),
                       face_fun = kleinBottleTriangularFaceFunction2(m))

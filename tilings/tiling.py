@@ -5,6 +5,7 @@ from .constants import VERTEX, EDGE, FACE, ARC, BLADE, CORNER
 from .constants import LABELS, DUAL, EDGE_COLORS
 from .constants import TRUNCATION_MAP, T
 from .functions import makeEdge, simplestGraph, meanpos, flagPosition
+from .functions import first, third, skeletonEdgeFunction
 from .functions import truncationVertexFunction
 
 class Tiling(Graph):
@@ -66,9 +67,9 @@ class Tiling(Graph):
             assert all(len(x) == 2 for x in blades.values()), \
                 "not all edges lie on two faces"
             kargs["data"] = edges
-            vertex_fun = lambda (u, v, f): u
-            edge_fun = lambda (u, v, f): Set([u, v])
-            face_fun = lambda (u, v, f): f
+            vertex_fun = first
+            edge_fun = skeletonEdgeFunction
+            face_fun = third
             self._muscles = simplestGraph(blades.values())
         kargs["loops"] = False
         kargs["multiedges"] = True

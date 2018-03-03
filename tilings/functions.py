@@ -7,11 +7,23 @@ from .constants import DODECAGON2_WRAP, DODECAGON2_SWAP
 from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
 from .constants import HORIZONTAL_LABELS, VERTICAL_LABELS
 
-makeEdge = lambda e: e*2 if len(e) == 1 else e
+def makeEdge(e):
+    return e*2 if len(e) == 1 else e
 
-first = lambda x: x[0]
+def empty(x):
+    return ()
 
-second = lambda x: x[1]
+def first(x):
+    return x[0]
+
+def second(x):
+    return x[1]
+
+def third(x):
+    return x[2]
+
+def skeletonEdgeFunction((u, v, f)):
+    return Set([u, v])
 
 def simplestGraph(edges):
     G = Graph(edges, loops = True, multiedges = True, immutable = True,
@@ -26,9 +38,9 @@ def meanpos(G, l):
     return tuple(sum(p) / float(len(p))
                  for p in zip(*(G._pos[x] for x in l)))
 
-flagPosition = lambda pu, pv, pw: tuple((1-C8-S8) * a +
-                                        C8 * b + S8 * c
-                                        for a, b, c in zip(pu, pv, pw))
+def flagPosition(pu, pv, pw):
+    return tuple((1-C8-S8) * a + C8 * b + S8 * c
+                 for a, b, c in zip(pu, pv, pw))
 
 def kleinBottleSquarePosition1(v, a, f, wrap = None):
     i, j = v
@@ -48,8 +60,9 @@ def kleinBottleSquareWrap1(p, v, a, f, wrap = None):
     x, y = p
     return (-x, y) if wrap is not None and 'u' in [a, f] and j == 0 else p
 
-kleinBottleSquareWrap2 = lambda i, j, hor, m: \
-    (-i if m % 2 == 0 else -i-1, HORIZONTAL_SWAP[hor]) if j == 0 else (i, hor)
+def kleinBottleSquareWrap2(i, j, hor, m):
+    return (-i if m % 2 == 0 else -i-1, HORIZONTAL_SWAP[hor]) if j == 0 \
+           else (i, hor)
 
 def squarePosition((i, j)):
     return (Integer(i), -Integer(j))
@@ -114,7 +127,8 @@ def triangularPosition(v, a, f, wrap = None):
     j = Integer(j)
     return (i - j/2, -j * S3)
 
-hosohedralFaceFunction = lambda x: x[-2] if x[-1] == 'r' else x[-2]-1
+def hosohedralFaceFunction(x):
+    return x[-2] if x[-1] == 'r' else x[-2]-1
 
 def kleinBottleSquareEdgeFunction1((v, e, f)):
     i, j = v
@@ -272,6 +286,5 @@ def triangularFaceFunction(k):
         return (v, f)
     return faceFun
 
-truncationVertexFunction = lambda s: Set(p for p, l in s)
-
-vertexFunction = lambda (v, e, f): v
+def truncationVertexFunction(s):
+    return Set(p for p, l in s)

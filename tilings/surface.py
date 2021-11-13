@@ -9,29 +9,29 @@ from .constants import DODECAGON, DODECAGON2, OCTAGON
 from .constants import HORIZONTAL_LABELS, VERTICAL_LABELS
 from .constants import TRIANGULAR_ARCS, SQUARE_FLAGS
 from .constants import HORIZONTAL_SWAP, HORIZONTAL_OFFSET
-from functions import empty, first, second
-from functions import hosohedralFaceFunction
-from functions import kleinBottleSquareEdgeFunction1
-from functions import kleinBottleSquareFaceFunction1
-from functions import kleinBottleSquarePosition1
-from functions import kleinBottleSquareWrap1
-from functions import kleinBottleSquareEdgeFunction2
-from functions import kleinBottleSquareFaceFunction2
-from functions import kleinBottleSquareWrap2
-from functions import kleinBottleTriangularEdgeFunction1
-from functions import kleinBottleTriangularFaceFunction1
-from functions import kleinBottleTriangularPosition1
-from functions import kleinBottleTriangularWrap1
-from functions import kleinBottleTriangularEdgeFunction2
-from functions import kleinBottleTriangularFaceFunction2
-from functions import kleinBottleTriangularPosition2
-from functions import kleinBottleTriangularWrap2
-from functions import squareEdgeFunction
-from functions import squareFaceFunction
-from functions import squarePosition
-from functions import triangularEdgeFunction
-from functions import triangularFaceFunction
-from functions import triangularPosition
+from .functions import empty, first, second
+from .functions import hosohedralFaceFunction
+from .functions import kleinBottleSquareEdgeFunction1
+from .functions import kleinBottleSquareFaceFunction1
+from .functions import kleinBottleSquarePosition1
+from .functions import kleinBottleSquareWrap1
+from .functions import kleinBottleSquareEdgeFunction2
+from .functions import kleinBottleSquareFaceFunction2
+from .functions import kleinBottleSquareWrap2
+from .functions import kleinBottleTriangularEdgeFunction1
+from .functions import kleinBottleTriangularFaceFunction1
+from .functions import kleinBottleTriangularPosition1
+from .functions import kleinBottleTriangularWrap1
+from .functions import kleinBottleTriangularEdgeFunction2
+from .functions import kleinBottleTriangularFaceFunction2
+from .functions import kleinBottleTriangularPosition2
+from .functions import kleinBottleTriangularWrap2
+from .functions import squareEdgeFunction
+from .functions import squareFaceFunction
+from .functions import squarePosition
+from .functions import triangularEdgeFunction
+from .functions import triangularFaceFunction
+from .functions import triangularPosition
 from .tiling import Tiling
 
 class Surface:

@@ -58,8 +58,8 @@ DODECAGON2_WRAP = {tuple(k): p for k, p
                            (False, 0), (False, 0), (False, 1)])}
 DODECAGON2_SWAP = dict(zip('abcABC', 'acbACB'))
 
-HORIZONTAL_SWAP = dict(zip(HORIZONTAL_LABELS, reversed(HORIZONTAL_LABELS)) +
-                       zip(VERTICAL_LABELS, VERTICAL_LABELS))
+HORIZONTAL_SWAP = {**dict(zip(HORIZONTAL_LABELS, reversed(HORIZONTAL_LABELS))),
+                   **dict(zip(VERTICAL_LABELS, VERTICAL_LABELS))}
 HORIZONTAL_OFFSET = dict(zip(HORIZONTAL_LABELS, [1, -1]))
 SQUARE_FLAGS = cartesian_product([HORIZONTAL_LABELS, VERTICAL_LABELS])
 OCTAGON = {tuple(k): (N(cos(x) * T), N(sin(x) * T))

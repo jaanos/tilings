@@ -22,7 +22,8 @@ def second(x):
 def third(x):
     return x[2]
 
-def skeletonEdgeFunction((u, v, f)):
+def skeletonEdgeFunction(e):
+    u, v, f = e
     return Set([u, v])
 
 def simplestGraph(edges):
@@ -64,7 +65,8 @@ def kleinBottleSquareWrap2(i, j, hor, m):
     return (-i if m % 2 == 0 else -i-1, HORIZONTAL_SWAP[hor]) if j == 0 \
            else (i, hor)
 
-def squarePosition((i, j)):
+def squarePosition(v):
+    i, j = v
     return (Integer(i), -Integer(j))
 
 def kleinBottleTriangularPosition1(v, a, f, wrap = None):
@@ -130,7 +132,8 @@ def triangularPosition(v, a, f, wrap = None):
 def hosohedralFaceFunction(x):
     return x[-2] if x[-1] == 'r' else x[-2]-1
 
-def kleinBottleSquareEdgeFunction1((v, e, f)):
+def kleinBottleSquareEdgeFunction1(flag):
+    v, e, f = flag
     i, j = v
     if e == 'l':
         return ((i-1, j), 'r')
@@ -139,7 +142,8 @@ def kleinBottleSquareEdgeFunction1((v, e, f)):
     else:
         return (v, e)
 
-def kleinBottleSquareFaceFunction1((v, e, f)):
+def kleinBottleSquareFaceFunction1(flag):
+    v, e, f = flag
     i, j = v
     lb = 'l'
     if 'u' in [e, f]:
@@ -152,7 +156,8 @@ def kleinBottleSquareFaceFunction1((v, e, f)):
     return (i, j)
 
 def kleinBottleSquareEdgeFunction2(m):
-    def edgeFun((v, e, f)):
+    def edgeFun(flag):
+        v, e, f = flag
         i, j = v
         hor = next(x for x in [e, f] if x in HORIZONTAL_LABELS)
         ver = next(x for x in [e, f] if x in VERTICAL_LABELS)
@@ -164,7 +169,8 @@ def kleinBottleSquareEdgeFunction2(m):
     return edgeFun
 
 def kleinBottleSquareFaceFunction2(m):
-    def faceFun((v, e, f)):
+    def faceFun(flag):
+        v, e, f = flag
         i, j = v
         if e == 'u':
             i, f = kleinBottleSquareWrap2(i, j, f, m)
@@ -177,7 +183,8 @@ def kleinBottleSquareFaceFunction2(m):
     return faceFun
 
 def squareEdgeFunction(k):
-    def edgeFun((v, e, f)):
+    def edgeFun(flag):
+        v, e, f = flag
         i, j = v
         if e == 'l':
             return ((i-1, j), 'r')
@@ -188,7 +195,8 @@ def squareEdgeFunction(k):
     return edgeFun
 
 def squareFaceFunction(k):
-    def faceFun((v, e, f)):
+    def faceFun(flag):
+        v, e, f = flag
         i, j = v
         if 'l' in [e, f]:
             i -= 1
@@ -199,7 +207,8 @@ def squareFaceFunction(k):
         return (i, j)
     return faceFun
 
-def kleinBottleTriangularEdgeFunction1((v, e, f)):
+def kleinBottleTriangularEdgeFunction1(flag):
+    v, e, f = flag
     i, j = v
     ib, bb, cc = (-i, 'c', 'B') if j == 0 else (i, 'B', 'c')
     if e == 'A':
@@ -211,7 +220,8 @@ def kleinBottleTriangularEdgeFunction1((v, e, f)):
     else:
         return (v, e)
 
-def kleinBottleTriangularFaceFunction1((v, e, f)):
+def kleinBottleTriangularFaceFunction1(flag):
+    v, e, f = flag
     i, j = v
     if f == 'u':
         if e in 'aB':
@@ -227,7 +237,8 @@ def kleinBottleTriangularFaceFunction1((v, e, f)):
 
 def kleinBottleTriangularEdgeFunction2(m):
     h = m % 2
-    def edgeFun((v, e, f)):
+    def edgeFun(flag):
+        v, e, f = flag
         i, j = v
         ib, bb, cc = (-i-h, 'c', 'b') if j == 0 else (i, 'b', 'c')
         if e == 'A':
@@ -242,7 +253,8 @@ def kleinBottleTriangularEdgeFunction2(m):
 
 def kleinBottleTriangularFaceFunction2(m):
     h = m % 2
-    def faceFun((v, e, f)):
+    def faceFun(flag):
+        v, e, f = flag
         i, j = v
         if f == 'r':
             if e in 'aB':
@@ -258,7 +270,8 @@ def kleinBottleTriangularFaceFunction2(m):
     return faceFun
 
 def triangularEdgeFunction(k):
-    def edgeFun((v, e, f)):
+    def edgeFun(flag):
+        v, e, f = flag
         i, j = v
         if e == 'A':
             return ((i-1, j), 'a')
@@ -271,7 +284,8 @@ def triangularEdgeFunction(k):
     return edgeFun
 
 def triangularFaceFunction(k):
-    def faceFun((v, e, f)):
+    def faceFun(flag):
+        v, e, f = flag
         i, j = v
         if f == 'u':
             if e in 'aB':
